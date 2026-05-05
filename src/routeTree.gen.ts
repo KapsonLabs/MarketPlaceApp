@@ -9,38 +9,146 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RequestRouteImport } from './routes/request'
+import { Route as ProvidersRouteImport } from './routes/providers'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as ForProvidersRouteImport } from './routes/for-providers'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RequestSuccessRouteImport } from './routes/request.success'
+import { Route as ProvidersProviderIdRouteImport } from './routes/providers.$providerId'
 
+const RequestRoute = RequestRouteImport.update({
+  id: '/request',
+  path: '/request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProvidersRoute = ProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForProvidersRoute = ForProvidersRouteImport.update({
+  id: '/for-providers',
+  path: '/for-providers',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequestSuccessRoute = RequestSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => RequestRoute,
+} as any)
+const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
+  id: '/$providerId',
+  path: '/$providerId',
+  getParentRoute: () => ProvidersRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/for-providers': typeof ForProvidersRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/providers': typeof ProvidersRouteWithChildren
+  '/request': typeof RequestRouteWithChildren
+  '/providers/$providerId': typeof ProvidersProviderIdRoute
+  '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/for-providers': typeof ForProvidersRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/providers': typeof ProvidersRouteWithChildren
+  '/request': typeof RequestRouteWithChildren
+  '/providers/$providerId': typeof ProvidersProviderIdRoute
+  '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/for-providers': typeof ForProvidersRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/providers': typeof ProvidersRouteWithChildren
+  '/request': typeof RequestRouteWithChildren
+  '/providers/$providerId': typeof ProvidersProviderIdRoute
+  '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/for-providers'
+    | '/how-it-works'
+    | '/providers'
+    | '/request'
+    | '/providers/$providerId'
+    | '/request/success'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/for-providers'
+    | '/how-it-works'
+    | '/providers'
+    | '/request'
+    | '/providers/$providerId'
+    | '/request/success'
+  id:
+    | '__root__'
+    | '/'
+    | '/for-providers'
+    | '/how-it-works'
+    | '/providers'
+    | '/request'
+    | '/providers/$providerId'
+    | '/request/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ForProvidersRoute: typeof ForProvidersRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  ProvidersRoute: typeof ProvidersRouteWithChildren
+  RequestRoute: typeof RequestRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/request': {
+      id: '/request'
+      path: '/request'
+      fullPath: '/request'
+      preLoaderRoute: typeof RequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/providers': {
+      id: '/providers'
+      path: '/providers'
+      fullPath: '/providers'
+      preLoaderRoute: typeof ProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-providers': {
+      id: '/for-providers'
+      path: '/for-providers'
+      fullPath: '/for-providers'
+      preLoaderRoute: typeof ForProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +156,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/request/success': {
+      id: '/request/success'
+      path: '/success'
+      fullPath: '/request/success'
+      preLoaderRoute: typeof RequestSuccessRouteImport
+      parentRoute: typeof RequestRoute
+    }
+    '/providers/$providerId': {
+      id: '/providers/$providerId'
+      path: '/$providerId'
+      fullPath: '/providers/$providerId'
+      preLoaderRoute: typeof ProvidersProviderIdRouteImport
+      parentRoute: typeof ProvidersRoute
+    }
   }
 }
 
+interface ProvidersRouteChildren {
+  ProvidersProviderIdRoute: typeof ProvidersProviderIdRoute
+}
+
+const ProvidersRouteChildren: ProvidersRouteChildren = {
+  ProvidersProviderIdRoute: ProvidersProviderIdRoute,
+}
+
+const ProvidersRouteWithChildren = ProvidersRoute._addFileChildren(
+  ProvidersRouteChildren,
+)
+
+interface RequestRouteChildren {
+  RequestSuccessRoute: typeof RequestSuccessRoute
+}
+
+const RequestRouteChildren: RequestRouteChildren = {
+  RequestSuccessRoute: RequestSuccessRoute,
+}
+
+const RequestRouteWithChildren =
+  RequestRoute._addFileChildren(RequestRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ForProvidersRoute: ForProvidersRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  ProvidersRoute: ProvidersRouteWithChildren,
+  RequestRoute: RequestRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
