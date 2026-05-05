@@ -29,11 +29,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "FixHub — Trusted home & property service providers" },
+      {
+        name: "description",
+        content:
+          "Request a vetted plumber, electrician, HVAC technician or handyman. Tenants and homeowners get matched in minutes.",
+      },
+      { property: "og:title", content: "FixHub — Service provider marketplace" },
+      {
+        property: "og:description",
+        content:
+          "Submit a maintenance request and we'll route it to the right pro — synced into your property's maintenance queue.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
