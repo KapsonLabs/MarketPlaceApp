@@ -81,7 +81,7 @@ function ProvidersPage() {
                     key={s}
                     onClick={() =>
                       navigate({
-                        search: (prev) => ({
+                        search: (prev: { specialty?: string; q?: string }) => ({
                           ...prev,
                           specialty: s === "All" ? undefined : s,
                         }),
