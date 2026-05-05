@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as RequestRouteImport } from './routes/request'
 import { Route as ProvidersRouteImport } from './routes/providers'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as RequestSuccessRouteImport } from './routes/request.success'
 import { Route as ProvidersProviderIdRouteImport } from './routes/providers.$providerId'
 
 const RequestRoute = RequestRouteImport.update({
@@ -29,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RequestSuccessRoute = RequestSuccessRouteImport.update({
+  id: '/success',
+  path: '/success',
+  getParentRoute: () => RequestRoute,
+} as any)
 const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
   id: '/$providerId',
   path: '/$providerId',
@@ -38,34 +44,53 @@ const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/providers': typeof ProvidersRouteWithChildren
-  '/request': typeof RequestRoute
+  '/request': typeof RequestRouteWithChildren
   '/providers/$providerId': typeof ProvidersProviderIdRoute
+  '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/providers': typeof ProvidersRouteWithChildren
-  '/request': typeof RequestRoute
+  '/request': typeof RequestRouteWithChildren
   '/providers/$providerId': typeof ProvidersProviderIdRoute
+  '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/providers': typeof ProvidersRouteWithChildren
-  '/request': typeof RequestRoute
+  '/request': typeof RequestRouteWithChildren
   '/providers/$providerId': typeof ProvidersProviderIdRoute
+  '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/providers' | '/request' | '/providers/$providerId'
+  fullPaths:
+    | '/'
+    | '/providers'
+    | '/request'
+    | '/providers/$providerId'
+    | '/request/success'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/providers' | '/request' | '/providers/$providerId'
-  id: '__root__' | '/' | '/providers' | '/request' | '/providers/$providerId'
+  to:
+    | '/'
+    | '/providers'
+    | '/request'
+    | '/providers/$providerId'
+    | '/request/success'
+  id:
+    | '__root__'
+    | '/'
+    | '/providers'
+    | '/request'
+    | '/providers/$providerId'
+    | '/request/success'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ProvidersRoute: typeof ProvidersRouteWithChildren
-  RequestRoute: typeof RequestRoute
+  RequestRoute: typeof RequestRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -91,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/request/success': {
+      id: '/request/success'
+      path: '/success'
+      fullPath: '/request/success'
+      preLoaderRoute: typeof RequestSuccessRouteImport
+      parentRoute: typeof RequestRoute
+    }
     '/providers/$providerId': {
       id: '/providers/$providerId'
       path: '/$providerId'
@@ -113,10 +145,21 @@ const ProvidersRouteWithChildren = ProvidersRoute._addFileChildren(
   ProvidersRouteChildren,
 )
 
+interface RequestRouteChildren {
+  RequestSuccessRoute: typeof RequestSuccessRoute
+}
+
+const RequestRouteChildren: RequestRouteChildren = {
+  RequestSuccessRoute: RequestSuccessRoute,
+}
+
+const RequestRouteWithChildren =
+  RequestRoute._addFileChildren(RequestRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ProvidersRoute: ProvidersRouteWithChildren,
-  RequestRoute: RequestRoute,
+  RequestRoute: RequestRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
