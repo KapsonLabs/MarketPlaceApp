@@ -41,7 +41,8 @@ const statusTone: Record<RequestStatus, string> = {
 };
 
 function AdminPage() {
-  const { requests } = Route.useLoaderData();
+  const data = Route.useLoaderData() as { requests: ForwardedMaintenanceRequest[] };
+  const requests = data.requests;
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [notes, setNotes] = useState<Record<string, string>>({});
