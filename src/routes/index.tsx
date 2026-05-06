@@ -19,7 +19,7 @@ import { providers, specialties } from "@/data/providers";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FixHub — Trusted home & property service providers" },
+      { title: "Casmara Systems — Trusted home & property service providers" },
       {
         name: "description",
         content:

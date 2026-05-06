@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/for-providers")({
   head: () => ({
     meta: [
-      { title: "Become a FixHub provider" },
+      { title: "Become a Casmara Systems provider" },
       {
         name: "description",
         content:
-          "Join FixHub to receive vetted maintenance jobs from tenants and homeowners.",
+          "Join Casmara Systems to receive vetted maintenance jobs from tenants and homeowners.",
       },
     ],
   }),
@@ -32,7 +32,7 @@ function ForProviders() {
       <main className="flex-1">
         <section className="container mx-auto max-w-3xl px-4 py-16">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            Grow your business with FixHub
+            Grow your business with Casmara Systems
           </h1>
           <p className="mt-3 text-lg text-muted-foreground">
             We connect verified pros with property managers and homeowners who

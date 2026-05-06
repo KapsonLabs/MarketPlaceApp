@@ -31,7 +31,7 @@ export const Route = createFileRoute("/request")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Request a service — FixHub" },
+      { title: "Request a service — Casmara Systems" },
       {
         name: "description",
         content:

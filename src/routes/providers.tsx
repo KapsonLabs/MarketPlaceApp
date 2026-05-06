@@ -18,7 +18,7 @@ export const Route = createFileRoute("/providers")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Browse service providers — FixHub" },
+      { title: "Browse service providers — Casmara Systems" },
       {
         name: "description",
         content:

@@ -7,11 +7,11 @@ import { Card, CardContent } from "@/components/ui/card";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "How it works — FixHub" },
+      { title: "How it works — Casmara Systems" },
       {
         name: "description",
         content:
-          "How FixHub routes maintenance requests from the public to the right service provider and into your property's maintenance queue.",
+          "How Casmara Systems routes maintenance requests from the public to the right service provider and into your property's maintenance queue.",
       },
     ],
   }),
@@ -48,7 +48,7 @@ function HowItWorks() {
       <main className="flex-1">
         <section className="container mx-auto max-w-4xl px-4 py-16">
           <h1 className="text-4xl font-bold tracking-tight text-foreground">
-            How FixHub works
+            How Casmara Systems works
           </h1>
           <p className="mt-3 text-lg text-muted-foreground">
             One marketplace, two audiences: tenants of managed properties and the
