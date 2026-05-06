@@ -180,94 +180,42 @@ function RequestPage() {
           )}
 
           <form onSubmit={onSubmit} className="mt-8 space-y-8">
-            {/* Audience */}
+            {/* Signed-in user */}
             <Card className="border-border">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold">I am a…</Label>
-                <RadioGroup
-                  value={audience}
-                  onValueChange={(v) => setAudience(v as Audience)}
-                  className="mt-3 grid gap-3 sm:grid-cols-2"
-                >
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <RadioGroupItem value="tenant" id="aud-tenant" />
-                    <div>
-                      <p className="font-medium text-foreground">Tenant</p>
-                      <p className="text-xs text-muted-foreground">
-                        I rent a unit in a managed property.
-                      </p>
-                    </div>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <RadioGroupItem value="public" id="aud-public" />
-                    <div>
-                      <p className="font-medium text-foreground">Homeowner / public</p>
-                      <p className="text-xs text-muted-foreground">
-                        I just need a pro at my address.
-                      </p>
-                    </div>
-                  </label>
-                </RadioGroup>
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <User className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user.email}
+                    {user.audience === "tenant" && user.propertyCode && (
+                      <> • {user.propertyCode} / Unit {user.unitNumber}</>
+                    )}
+                  </p>
+                </div>
+                <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {user.audience}
+                </span>
               </CardContent>
             </Card>
 
-            {/* Contact */}
+            {/* Location */}
             <Card className="border-border">
-              <CardContent className="space-y-4 p-6">
-                <h2 className="text-lg font-semibold text-foreground">Your details</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Full name" id="name">
-                    <Input
-                      id="name"
-                      required
-                      value={form.name}
-                      onChange={(e) => update("name", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Email" id="email">
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Phone" id="phone">
-                    <Input
-                      id="phone"
-                      required
-                      value={form.phone}
-                      onChange={(e) => update("phone", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Service address" id="address">
-                    <Input
-                      id="address"
-                      required
-                      value={form.address}
-                      onChange={(e) => update("address", e.target.value)}
-                    />
-                  </Field>
+              <CardContent className="space-y-3 p-6">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Service location
+                  </h2>
                 </div>
-                {audience === "tenant" && (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Property code" id="propcode" hint="e.g. PROP-002">
-                      <Input
-                        id="propcode"
-                        value={form.propertyCode}
-                        onChange={(e) => update("propertyCode", e.target.value)}
-                      />
-                    </Field>
-                    <Field label="Unit number" id="unitno">
-                      <Input
-                        id="unitno"
-                        value={form.unitNumber}
-                        onChange={(e) => update("unitNumber", e.target.value)}
-                      />
-                    </Field>
-                  </div>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  We use your coordinates to dispatch the nearest provider.
+                </p>
+                <ClientOnly fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}>
+                  <LocationPicker value={location} onChange={setLocation} />
+                </ClientOnly>
               </CardContent>
             </Card>
 
