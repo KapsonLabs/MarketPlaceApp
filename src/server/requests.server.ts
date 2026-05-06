@@ -33,6 +33,13 @@ export interface RequestPhoto {
   dataUrl: string;
 }
 
+export interface RequestLocation {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+  address?: string;
+}
+
 export interface ForwardedMaintenanceRequest {
   id: string;
   // Maps to MaintenanceRequest in Unit & Tenant Views
@@ -48,7 +55,8 @@ export interface ForwardedMaintenanceRequest {
   updatedAt: string;
   // Marketplace metadata
   source: "marketplace";
-  contact: { name: string; email: string; phone: string; address: string };
+  userId: string;
+  location: RequestLocation;
   preferredProviderId?: string;
   audience: "tenant" | "public";
   photos: RequestPhoto[];

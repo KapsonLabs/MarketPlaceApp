@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, ArrowRight, Upload, X } from "lucide-react";
+import { Loader2, ArrowRight, Upload, X, MapPin, User } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,12 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
 import { specialties, getProvider } from "@/data/providers";
 import { submitRequest } from "@/server/requests.functions";
+import { useCurrentUser } from "@/lib/current-user";
+import { ClientOnly } from "@tanstack/react-router";
+import { LocationPicker, type PickedLocation } from "@/components/location-picker";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -62,26 +61,19 @@ export const Route = createFileRoute("/request")({
   component: RequestPage,
 });
 
-type Audience = "tenant" | "public";
-
 function RequestPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const user = useCurrentUser();
   const preferred = search.providerId ? getProvider(search.providerId) : undefined;
 
-  const [audience, setAudience] = useState<Audience>("tenant");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [location, setLocation] = useState<PickedLocation | null>(null);
 
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    propertyCode: "",
-    unitNumber: "",
     specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
     title: "",
     description: "",
@@ -94,23 +86,29 @@ function RequestPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!location) {
+      setError("Please share your location or drop a pin on the map.");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await submitRequest({
         data: {
-          audience,
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          address: form.address,
-          propertyCode: form.propertyCode || undefined,
-          unitNumber: form.unitNumber || undefined,
+          audience: user.audience,
+          userId: user.id,
+          propertyCode: user.propertyCode,
+          unitNumber: user.unitNumber,
           specialty: form.specialty as never,
           title: form.title,
           description: form.description,
           priority: form.priority,
           preferredProviderId: preferred?.id,
           photos,
+          location: {
+            lat: location.lat,
+            lng: location.lng,
+            accuracy: location.accuracy,
+          },
         },
       });
       navigate({
@@ -182,94 +180,42 @@ function RequestPage() {
           )}
 
           <form onSubmit={onSubmit} className="mt-8 space-y-8">
-            {/* Audience */}
+            {/* Signed-in user */}
             <Card className="border-border">
-              <CardContent className="p-6">
-                <Label className="text-sm font-semibold">I am a…</Label>
-                <RadioGroup
-                  value={audience}
-                  onValueChange={(v) => setAudience(v as Audience)}
-                  className="mt-3 grid gap-3 sm:grid-cols-2"
-                >
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <RadioGroupItem value="tenant" id="aud-tenant" />
-                    <div>
-                      <p className="font-medium text-foreground">Tenant</p>
-                      <p className="text-xs text-muted-foreground">
-                        I rent a unit in a managed property.
-                      </p>
-                    </div>
-                  </label>
-                  <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-4 transition-colors has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-                    <RadioGroupItem value="public" id="aud-public" />
-                    <div>
-                      <p className="font-medium text-foreground">Homeowner / public</p>
-                      <p className="text-xs text-muted-foreground">
-                        I just need a pro at my address.
-                      </p>
-                    </div>
-                  </label>
-                </RadioGroup>
+              <CardContent className="flex items-center gap-4 p-6">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <User className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {user.email}
+                    {user.audience === "tenant" && user.propertyCode && (
+                      <> • {user.propertyCode} / Unit {user.unitNumber}</>
+                    )}
+                  </p>
+                </div>
+                <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {user.audience}
+                </span>
               </CardContent>
             </Card>
 
-            {/* Contact */}
+            {/* Location */}
             <Card className="border-border">
-              <CardContent className="space-y-4 p-6">
-                <h2 className="text-lg font-semibold text-foreground">Your details</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Full name" id="name">
-                    <Input
-                      id="name"
-                      required
-                      value={form.name}
-                      onChange={(e) => update("name", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Email" id="email">
-                    <Input
-                      id="email"
-                      type="email"
-                      required
-                      value={form.email}
-                      onChange={(e) => update("email", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Phone" id="phone">
-                    <Input
-                      id="phone"
-                      required
-                      value={form.phone}
-                      onChange={(e) => update("phone", e.target.value)}
-                    />
-                  </Field>
-                  <Field label="Service address" id="address">
-                    <Input
-                      id="address"
-                      required
-                      value={form.address}
-                      onChange={(e) => update("address", e.target.value)}
-                    />
-                  </Field>
+              <CardContent className="space-y-3 p-6">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Service location
+                  </h2>
                 </div>
-                {audience === "tenant" && (
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Property code" id="propcode" hint="e.g. PROP-002">
-                      <Input
-                        id="propcode"
-                        value={form.propertyCode}
-                        onChange={(e) => update("propertyCode", e.target.value)}
-                      />
-                    </Field>
-                    <Field label="Unit number" id="unitno">
-                      <Input
-                        id="unitno"
-                        value={form.unitNumber}
-                        onChange={(e) => update("unitNumber", e.target.value)}
-                      />
-                    </Field>
-                  </div>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  We use your coordinates to dispatch the nearest provider.
+                </p>
+                <ClientOnly fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}>
+                  <LocationPicker value={location} onChange={setLocation} />
+                </ClientOnly>
               </CardContent>
             </Card>
 
