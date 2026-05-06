@@ -9,6 +9,30 @@ export type RequestCategory =
   | "Structural"
   | "Other";
 
+export type RequestStatus =
+  | "Open"
+  | "Triaged"
+  | "Assigned"
+  | "InProgress"
+  | "Completed"
+  | "Cancelled";
+
+export const REQUEST_STATUSES: RequestStatus[] = [
+  "Open",
+  "Triaged",
+  "Assigned",
+  "InProgress",
+  "Completed",
+  "Cancelled",
+];
+
+export interface RequestPhoto {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+}
+
 export interface ForwardedMaintenanceRequest {
   id: string;
   // Maps to MaintenanceRequest in Unit & Tenant Views
@@ -19,7 +43,7 @@ export interface ForwardedMaintenanceRequest {
   description: string;
   category: RequestCategory;
   priority: "Low" | "Medium" | "High" | "Emergency";
-  status: "Open";
+  status: RequestStatus;
   createdAt: string;
   updatedAt: string;
   // Marketplace metadata
@@ -27,6 +51,8 @@ export interface ForwardedMaintenanceRequest {
   contact: { name: string; email: string; phone: string; address: string };
   preferredProviderId?: string;
   audience: "tenant" | "public";
+  photos: RequestPhoto[];
+  notes?: string;
 }
 
 const store: ForwardedMaintenanceRequest[] = [];
@@ -40,6 +66,19 @@ export function pushRequest(r: ForwardedMaintenanceRequest) {
 
 export function listRequests() {
   return store;
+}
+
+export function updateRequestStatus(
+  id: string,
+  status: RequestStatus,
+  notes?: string,
+): ForwardedMaintenanceRequest | null {
+  const r = store.find((x) => x.id === id);
+  if (!r) return null;
+  r.status = status;
+  if (notes !== undefined) r.notes = notes;
+  r.updatedAt = new Date().toISOString();
+  return r;
 }
 
 export function mapSpecialtyToCategory(s: Specialty): RequestCategory {

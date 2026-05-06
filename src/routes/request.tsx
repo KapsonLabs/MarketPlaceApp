@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, ArrowRight } from "lucide-react";
+import { Loader2, ArrowRight, Upload, X } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -22,6 +22,26 @@ import {
 import { specialties, getProvider } from "@/data/providers";
 import { submitRequest } from "@/server/requests.functions";
 
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_PHOTOS = 5;
+
+interface UploadedPhoto {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
+}
+
 const searchSchema = z.object({
   providerId: z.string().optional(),
   specialty: z.string().optional(),
@@ -31,7 +51,7 @@ export const Route = createFileRoute("/request")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "Request a service — FixHub" },
+      { title: "Request a service — Casmara Systems" },
       {
         name: "description",
         content:
@@ -52,6 +72,8 @@ function RequestPage() {
   const [audience, setAudience] = useState<Audience>("tenant");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -88,6 +110,7 @@ function RequestPage() {
           description: form.description,
           priority: form.priority,
           preferredProviderId: preferred?.id,
+          photos,
         },
       });
       navigate({
@@ -98,6 +121,37 @@ function RequestPage() {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setSubmitting(false);
     }
+  }
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || !files.length) return;
+    setPhotoError(null);
+    const next: UploadedPhoto[] = [...photos];
+    for (const file of Array.from(files)) {
+      if (next.length >= MAX_PHOTOS) {
+        setPhotoError(`You can upload up to ${MAX_PHOTOS} photos.`);
+        break;
+      }
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        setPhotoError(`"${file.name}" is not a supported image (JPG, PNG, WebP).`);
+        continue;
+      }
+      if (file.size > MAX_BYTES) {
+        setPhotoError(`"${file.name}" exceeds the 5 MB limit.`);
+        continue;
+      }
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
+        next.push({ name: file.name, type: file.type, size: file.size, dataUrl });
+      } catch {
+        setPhotoError(`Could not read "${file.name}".`);
+      }
+    }
+    setPhotos(next);
+  }
+
+  function removePhoto(idx: number) {
+    setPhotos((p) => p.filter((_, i) => i !== idx));
   }
 
   return (
@@ -280,6 +334,60 @@ function RequestPage() {
                     onChange={(e) => update("description", e.target.value)}
                   />
                 </Field>
+
+                <div className="space-y-2">
+                  <Label htmlFor="photos">Photos (optional)</Label>
+                  <label
+                    htmlFor="photos"
+                    className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 p-6 text-center transition-colors hover:border-primary"
+                  >
+                    <Upload className="h-6 w-6 text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">
+                      Click to upload photos
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      JPG, PNG or WebP — up to 5 MB each, max {MAX_PHOTOS} photos
+                    </p>
+                    <input
+                      id="photos"
+                      type="file"
+                      multiple
+                      accept={ACCEPTED_TYPES.join(",")}
+                      className="hidden"
+                      onChange={(e) => {
+                        handleFiles(e.target.files);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {photoError && (
+                    <p className="text-xs text-destructive">{photoError}</p>
+                  )}
+                  {photos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
+                      {photos.map((p, i) => (
+                        <div
+                          key={i}
+                          className="group relative aspect-square overflow-hidden rounded-md border border-border"
+                        >
+                          <img
+                            src={p.dataUrl}
+                            alt={p.name}
+                            className="h-full w-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removePhoto(i)}
+                            className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground shadow opacity-0 transition-opacity group-hover:opacity-100"
+                            aria-label={`Remove ${p.name}`}
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 

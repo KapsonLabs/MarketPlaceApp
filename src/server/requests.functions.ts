@@ -2,10 +2,24 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
   pushRequest,
+  listRequests,
+  updateRequestStatus,
   mapSpecialtyToCategory,
+  REQUEST_STATUSES,
   type ForwardedMaintenanceRequest,
+  type RequestStatus,
 } from "./requests.server";
 import type { Specialty } from "@/data/providers";
+
+const photoSchema = z.object({
+  name: z.string().min(1).max(200),
+  type: z.string().regex(/^image\/(jpeg|png|webp|heic|heif)$/),
+  size: z.number().int().min(1).max(5 * 1024 * 1024),
+  dataUrl: z
+    .string()
+    .startsWith("data:image/")
+    .max(7 * 1024 * 1024),
+});
 
 const schema = z.object({
   audience: z.enum(["tenant", "public"]),
@@ -30,6 +44,7 @@ const schema = z.object({
   description: z.string().min(10).max(2000),
   priority: z.enum(["Low", "Medium", "High", "Emergency"]),
   preferredProviderId: z.string().max(60).optional(),
+  photos: z.array(photoSchema).max(5).optional(),
 });
 
 export const submitRequest = createServerFn({ method: "POST" })
@@ -58,7 +73,28 @@ export const submitRequest = createServerFn({ method: "POST" })
       },
       preferredProviderId: data.preferredProviderId,
       audience: data.audience,
+      photos: data.photos ?? [],
     };
     pushRequest(forwarded);
     return { id, ok: true };
+  });
+
+export const listAllRequests = createServerFn({ method: "GET" }).handler(
+  async () => {
+    return { requests: listRequests() };
+  },
+);
+
+const statusSchema = z.object({
+  id: z.string().min(1).max(60),
+  status: z.enum(REQUEST_STATUSES as [RequestStatus, ...RequestStatus[]]),
+  notes: z.string().max(2000).optional(),
+});
+
+export const setRequestStatus = createServerFn({ method: "POST" })
+  .inputValidator((input) => statusSchema.parse(input))
+  .handler(async ({ data }) => {
+    const r = updateRequestStatus(data.id, data.status, data.notes);
+    if (!r) throw new Error("Request not found");
+    return { ok: true, request: r };
   });

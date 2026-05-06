@@ -29,13 +29,13 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "FixHub — Trusted home & property service providers" },
+      { title: "Casmara Systems — Trusted home & property service providers" },
       {
         name: "description",
         content:
           "Request a vetted plumber, electrician, HVAC technician or handyman. Tenants and homeowners get matched in minutes.",
       },
-      { property: "og:title", content: "FixHub — Service provider marketplace" },
+      { property: "og:title", content: "Casmara Systems — Service provider marketplace" },
       {
         property: "og:description",
         content:

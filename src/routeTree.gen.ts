@@ -13,6 +13,7 @@ import { Route as RequestRouteImport } from './routes/request'
 import { Route as ProvidersRouteImport } from './routes/providers'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForProvidersRouteImport } from './routes/for-providers'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestSuccessRouteImport } from './routes/request.success'
 import { Route as ProvidersProviderIdRouteImport } from './routes/providers.$providerId'
@@ -37,6 +38,11 @@ const ForProvidersRoute = ForProvidersRouteImport.update({
   path: '/for-providers',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -55,6 +61,7 @@ const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/providers': typeof ProvidersRouteWithChildren
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/providers': typeof ProvidersRouteWithChildren
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/providers': typeof ProvidersRouteWithChildren
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/for-providers'
     | '/how-it-works'
     | '/providers'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
     | '/for-providers'
     | '/how-it-works'
     | '/providers'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/for-providers'
     | '/how-it-works'
     | '/providers'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   ForProvidersRoute: typeof ForProvidersRoute
   HowItWorksRoute: typeof HowItWorksRoute
   ProvidersRoute: typeof ProvidersRouteWithChildren
@@ -147,6 +160,13 @@ declare module '@tanstack/react-router' {
       path: '/for-providers'
       fullPath: '/for-providers'
       preLoaderRoute: typeof ForProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -198,6 +218,7 @@ const RequestRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   ForProvidersRoute: ForProvidersRoute,
   HowItWorksRoute: HowItWorksRoute,
   ProvidersRoute: ProvidersRouteWithChildren,

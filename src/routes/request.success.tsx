@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export const Route = createFileRoute("/request/success")({
   validateSearch: z.object({ id: z.string().optional() }),
-  head: () => ({ meta: [{ title: "Request submitted — FixHub" }] }),
+  head: () => ({ meta: [{ title: "Request submitted — Casmara Systems" }] }),
   component: SuccessPage,
 });
 

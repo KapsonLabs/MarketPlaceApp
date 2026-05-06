@@ -23,7 +23,7 @@ export const Route = createFileRoute("/providers/$providerId")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.provider.company} — FixHub` },
+          { title: `${loaderData.provider.company} — Casmara Systems` },
           { name: "description", content: loaderData.provider.bio },
         ]
       : [],
