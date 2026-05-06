@@ -23,10 +23,7 @@ const photoSchema = z.object({
 
 const schema = z.object({
   audience: z.enum(["tenant", "public"]),
-  name: z.string().min(2).max(120),
-  email: z.string().email().max(200),
-  phone: z.string().min(6).max(40),
-  address: z.string().min(3).max(300),
+  userId: z.string().min(1).max(120),
   propertyCode: z.string().max(60).optional(),
   unitNumber: z.string().max(40).optional(),
   specialty: z.enum([
@@ -45,6 +42,12 @@ const schema = z.object({
   priority: z.enum(["Low", "Medium", "High", "Emergency"]),
   preferredProviderId: z.string().max(60).optional(),
   photos: z.array(photoSchema).max(5).optional(),
+  location: z.object({
+    lat: z.number().min(-90).max(90),
+    lng: z.number().min(-180).max(180),
+    accuracy: z.number().min(0).max(100000).optional(),
+    address: z.string().max(300).optional(),
+  }),
 });
 
 export const submitRequest = createServerFn({ method: "POST" })
@@ -56,7 +59,7 @@ export const submitRequest = createServerFn({ method: "POST" })
       id,
       propertyId: data.audience === "tenant" ? data.propertyCode ?? null : null,
       unitId: data.audience === "tenant" ? data.unitNumber ?? null : null,
-      tenantId: data.audience === "tenant" ? data.email : null,
+      tenantId: data.audience === "tenant" ? data.userId : null,
       title: data.title,
       description: data.description,
       category: mapSpecialtyToCategory(data.specialty as Specialty),
@@ -65,12 +68,8 @@ export const submitRequest = createServerFn({ method: "POST" })
       createdAt: now,
       updatedAt: now,
       source: "marketplace",
-      contact: {
-        name: data.name,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-      },
+      userId: data.userId,
+      location: data.location,
       preferredProviderId: data.preferredProviderId,
       audience: data.audience,
       photos: data.photos ?? [],
