@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, ArrowRight, Upload, X } from "lucide-react";
+import { Loader2, ArrowRight, Upload, X, MapPin, User } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,12 +15,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  RadioGroup,
-  RadioGroupItem,
-} from "@/components/ui/radio-group";
 import { specialties, getProvider } from "@/data/providers";
 import { submitRequest } from "@/server/requests.functions";
+import { useCurrentUser } from "@/lib/current-user";
+import { ClientOnly } from "@tanstack/react-router";
+import { LocationPicker, type PickedLocation } from "@/components/location-picker";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -62,26 +61,19 @@ export const Route = createFileRoute("/request")({
   component: RequestPage,
 });
 
-type Audience = "tenant" | "public";
-
 function RequestPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
+  const user = useCurrentUser();
   const preferred = search.providerId ? getProvider(search.providerId) : undefined;
 
-  const [audience, setAudience] = useState<Audience>("tenant");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [location, setLocation] = useState<PickedLocation | null>(null);
 
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    address: "",
-    propertyCode: "",
-    unitNumber: "",
     specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
     title: "",
     description: "",
@@ -94,23 +86,29 @@ function RequestPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!location) {
+      setError("Please share your location or drop a pin on the map.");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await submitRequest({
         data: {
-          audience,
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          address: form.address,
-          propertyCode: form.propertyCode || undefined,
-          unitNumber: form.unitNumber || undefined,
+          audience: user.audience,
+          userId: user.id,
+          propertyCode: user.propertyCode,
+          unitNumber: user.unitNumber,
           specialty: form.specialty as never,
           title: form.title,
           description: form.description,
           priority: form.priority,
           preferredProviderId: preferred?.id,
           photos,
+          location: {
+            lat: location.lat,
+            lng: location.lng,
+            accuracy: location.accuracy,
+          },
         },
       });
       navigate({
