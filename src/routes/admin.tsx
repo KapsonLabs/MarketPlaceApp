@@ -152,10 +152,23 @@ function AdminPage() {
 
                   <div className="grid gap-3 text-xs text-muted-foreground sm:grid-cols-2">
                     <div>
-                      <p className="font-semibold text-foreground">Contact</p>
-                      <p>{r.contact.name}</p>
-                      <p>{r.contact.email} • {r.contact.phone}</p>
-                      <p>{r.contact.address}</p>
+                      <p className="font-semibold text-foreground">Requester</p>
+                      <p>User ID: {r.userId}</p>
+                      <p>
+                        Location:{" "}
+                        <a
+                          href={`https://www.google.com/maps?q=${r.location.lat},${r.location.lng}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          {r.location.lat.toFixed(5)}, {r.location.lng.toFixed(5)}
+                        </a>
+                        {r.location.accuracy
+                          ? ` (±${Math.round(r.location.accuracy)} m)`
+                          : ""}
+                      </p>
+                      {r.location.address && <p>{r.location.address}</p>}
                     </div>
                     <div>
                       <p className="font-semibold text-foreground">Property</p>
