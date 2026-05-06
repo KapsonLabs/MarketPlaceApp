@@ -7,6 +7,12 @@ import {
   Star,
   Wrench,
   Calendar,
+  BriefcaseBusiness,
+  MessageSquareText,
+  ShieldCheck,
+  Store,
+  CheckCircle2,
+  Languages,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -37,15 +43,33 @@ export const Route = createFileRoute("/providers/$providerId")({
     </div>
   ),
   errorComponent: ({ error }) => (
-    <div className="container mx-auto px-4 py-20 text-center text-destructive">
-      {error.message}
-    </div>
+    <div className="container mx-auto px-4 py-20 text-center text-destructive">{error.message}</div>
   ),
   component: ProviderDetail,
 });
 
 function ProviderDetail() {
   const { provider: p } = Route.useLoaderData();
+  const services = p.services ?? ["On-site assessment", "Material sourcing", "Photo job updates"];
+  const certifications = p.certifications ?? [
+    "Identity verified",
+    "Workmanship guarantee",
+    "Marketplace quality checks",
+  ];
+  const serviceAreas = p.serviceAreas ?? [p.city];
+  const languages = p.languages ?? ["English"];
+  const reviews = p.profileReviews ?? [
+    {
+      id: "review-default-1",
+      author: "Verified customer",
+      role: "Customer",
+      rating: Math.round(p.rating),
+      date: "Recent",
+      service: p.specialty,
+      comment:
+        "Professional service, clear communication and tidy handover after the job was completed.",
+    },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -63,13 +87,26 @@ function ProviderDetail() {
               <Card className="border-border">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h1 className="text-2xl font-bold text-foreground">
-                        {p.company}
-                      </h1>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Lead pro: {p.name}
-                      </p>
+                    <div className="flex gap-4">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-primary text-xl font-bold text-primary-foreground">
+                        {p.name
+                          .split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .slice(0, 2)}
+                      </div>
+                      <div>
+                        <h1 className="text-2xl font-bold text-foreground">{p.company}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">Lead pro: {p.name}</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Badge variant="outline">
+                            <Wrench className="mr-1 h-3 w-3" /> {p.specialty}
+                          </Badge>
+                          <Badge variant="outline">
+                            <ShieldCheck className="mr-1 h-3 w-3" /> Workmanship guarantee
+                          </Badge>
+                        </div>
+                      </div>
                     </div>
                     {p.verified && (
                       <Badge variant="secondary" className="gap-1">
@@ -80,8 +117,8 @@ function ProviderDetail() {
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Star className="h-4 w-4 fill-warning text-warning" />
-                      <span className="font-medium text-foreground">{p.rating}</span>
-                      ({p.reviews} reviews)
+                      <span className="font-medium text-foreground">{p.rating}</span>({p.reviews}{" "}
+                      reviews)
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-4 w-4" /> {p.city}
@@ -90,18 +127,69 @@ function ProviderDetail() {
                       <Clock className="h-4 w-4" /> Responds {p.responseTime.toLowerCase()}
                     </span>
                   </div>
-                  <Badge variant="outline" className="mt-4">
-                    <Wrench className="mr-1 h-3 w-3" /> {p.specialty}
-                  </Badge>
                   <p className="mt-6 leading-relaxed text-foreground">{p.bio}</p>
+
+                  <div className="mt-6 grid gap-3 sm:grid-cols-3">
+                    {services.slice(0, 6).map((service) => (
+                      <div
+                        key={service}
+                        className="rounded-lg border border-border bg-muted/30 p-3 text-sm font-medium text-foreground"
+                      >
+                        <BriefcaseBusiness className="mb-2 h-4 w-4 text-primary" />
+                        {service}
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
 
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <Stat label="Years experience" value={`${p.yearsExperience}`} />
                 <Stat label="Jobs completed" value={p.completedJobs.toLocaleString()} />
-                <Stat label="Hourly rate" value={`KSh ${p.hourlyRate.toLocaleString()}`} />
+                <Stat label="Hourly rate" value={`USh ${p.hourlyRate.toLocaleString()}`} />
               </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <DetailPanel title="Credentials" icon={ShieldCheck}>
+                  {certifications.map((item) => (
+                    <DetailRow key={item}>{item}</DetailRow>
+                  ))}
+                </DetailPanel>
+                <DetailPanel title="Coverage" icon={MapPin}>
+                  {serviceAreas.map((area) => (
+                    <DetailRow key={area}>{area}</DetailRow>
+                  ))}
+                </DetailPanel>
+                <DetailPanel title="Languages" icon={Languages}>
+                  {languages.map((language) => (
+                    <DetailRow key={language}>{language}</DetailRow>
+                  ))}
+                </DetailPanel>
+                <DetailPanel title="Availability" icon={Clock}>
+                  <DetailRow>{p.availability ?? p.responseTime}</DetailRow>
+                </DetailPanel>
+              </div>
+
+              <Card className="mt-6 border-border">
+                <CardContent className="p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageSquareText className="h-4 w-4 text-primary" />
+                      <h2 className="text-lg font-semibold text-foreground">Reviews</h2>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Star className="h-4 w-4 fill-warning text-warning" />
+                      <span className="font-medium text-foreground">{p.rating}</span>
+                      average from {p.reviews} reviews
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {reviews.map((review) => (
+                      <Review key={review.id} review={review} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             <aside className="lg:col-span-1">
@@ -109,7 +197,7 @@ function ProviderDetail() {
                 <CardContent className="p-6">
                   <p className="text-sm text-muted-foreground">Starting from</p>
                   <p className="text-3xl font-bold text-foreground">
-                    KSh {p.hourlyRate.toLocaleString()}
+                    USh {p.hourlyRate.toLocaleString()}
                     <span className="text-sm font-normal text-muted-foreground"> /hr</span>
                   </p>
                   <Button asChild size="lg" className="mt-5 w-full">
@@ -123,6 +211,11 @@ function ProviderDetail() {
                   <p className="mt-3 text-center text-xs text-muted-foreground">
                     No charge until the pro accepts your request.
                   </p>
+                  <Button asChild size="lg" variant="outline" className="mt-3 w-full">
+                    <Link to="/materials">
+                      <Store className="mr-1 h-4 w-4" /> Shop materials
+                    </Link>
+                  </Button>
                 </CardContent>
               </Card>
             </aside>
@@ -130,6 +223,73 @@ function ProviderDetail() {
         </div>
       </main>
       <SiteFooter />
+    </div>
+  );
+}
+
+function DetailPanel({
+  title,
+  icon: Icon,
+  children,
+}: {
+  title: string;
+  icon: typeof ShieldCheck;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card className="border-border">
+      <CardContent className="p-5">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+        </div>
+        <div className="mt-4 space-y-2">{children}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DetailRow({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+      <span>{children}</span>
+    </div>
+  );
+}
+
+function Review({
+  review,
+}: {
+  review: {
+    author: string;
+    role: string;
+    rating: number;
+    date: string;
+    service: string;
+    comment: string;
+  };
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-background p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-foreground">{review.author}</p>
+          <p className="text-xs text-muted-foreground">
+            {review.role} • {review.date}
+          </p>
+        </div>
+        <Badge variant="outline">{review.service}</Badge>
+      </div>
+      <div className="mt-3 flex items-center gap-1 text-warning">
+        {Array.from({ length: 5 }).map((_, idx) => (
+          <Star
+            key={idx}
+            className={"h-3.5 w-3.5 " + (idx < review.rating ? "fill-current" : "text-muted")}
+          />
+        ))}
+      </div>
+      <p className="mt-3 text-sm leading-relaxed text-foreground">{review.comment}</p>
     </div>
   );
 }

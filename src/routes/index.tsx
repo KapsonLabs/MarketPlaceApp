@@ -7,7 +7,7 @@ import {
   Shield,
   Sparkles,
   Star,
-  Wrench,
+  Store,
   Zap,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
@@ -83,9 +83,9 @@ function Landing() {
                 </span>
               </h1>
               <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-                Request a plumber, electrician, HVAC tech or handyman. Tenants get
-                their request routed straight into the building's maintenance queue —
-                homeowners get a vetted pro on-site, fast.
+                Request a plumber, electrician, HVAC tech or handyman. Tenants get their request
+                routed straight into the building's maintenance queue — homeowners get a vetted pro
+                on-site, fast.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button asChild size="lg" className="shadow-[var(--shadow-elegant)]">
@@ -95,6 +95,9 @@ function Landing() {
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <Link to="/providers">Browse providers</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link to="/materials">Materials market</Link>
                 </Button>
               </div>
               <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -110,9 +113,7 @@ function Landing() {
             <div className="relative">
               <Card className="border-border shadow-[var(--shadow-elegant)]">
                 <CardContent className="p-6">
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Popular services
-                  </p>
+                  <p className="text-sm font-medium text-muted-foreground">Popular services</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {specialties.slice(0, 8).map((s) => (
                       <Link
@@ -134,9 +135,7 @@ function Landing() {
                         className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3 transition-all hover:border-primary"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-foreground">
-                            {p.company}
-                          </p>
+                          <p className="text-sm font-semibold text-foreground">{p.company}</p>
                           <p className="text-xs text-muted-foreground">
                             {p.specialty} • {p.city}
                           </p>
@@ -174,9 +173,7 @@ function Landing() {
                   <p className="mt-4 text-xs font-medium uppercase tracking-wider text-muted-foreground">
                     Step {i + 1}
                   </p>
-                  <h3 className="mt-1 text-lg font-semibold text-foreground">
-                    {s.title}
-                  </h3>
+                  <h3 className="mt-1 text-lg font-semibold text-foreground">{s.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{s.body}</p>
                 </CardContent>
               </Card>
@@ -188,9 +185,21 @@ function Landing() {
         <section className="border-y border-border bg-card">
           <div className="container mx-auto grid gap-8 px-4 py-16 md:grid-cols-3">
             {[
-              { icon: Shield, title: "Vetted & insured", body: "Background checks, license verification, customer reviews." },
-              { icon: Clock, title: "Real response times", body: "Most jobs accepted within 30 minutes during business hours." },
-              { icon: Wrench, title: "Workmanship guarantee", body: "If something isn't right, we send someone back at no extra cost." },
+              {
+                icon: Shield,
+                title: "Vetted & insured",
+                body: "Background checks, license verification, customer reviews.",
+              },
+              {
+                icon: Clock,
+                title: "Real response times",
+                body: "Most jobs accepted within 30 minutes during business hours.",
+              },
+              {
+                icon: Store,
+                title: "Materials market",
+                body: "Source approved repair materials and ask a provider to install them.",
+              },
             ].map((b) => (
               <div key={b.title} className="flex gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

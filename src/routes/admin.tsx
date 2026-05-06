@@ -16,12 +16,12 @@ import {
 import {
   listAllRequests,
   setRequestStatus,
-} from "@/server/requests.functions";
+} from "@/lib/requests.functions";
 import {
   REQUEST_STATUSES,
   type ForwardedMaintenanceRequest,
   type RequestStatus,
-} from "@/server/requests.server";
+} from "@/lib/request-types";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({

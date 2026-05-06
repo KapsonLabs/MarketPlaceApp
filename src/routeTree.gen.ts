@@ -9,23 +9,36 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RequestRouteImport } from './routes/request'
-import { Route as ProvidersRouteImport } from './routes/providers'
+import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForProvidersRouteImport } from './routes/for-providers'
+import { Route as BillingRouteImport } from './routes/billing'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RequestSuccessRouteImport } from './routes/request.success'
 import { Route as ProvidersProviderIdRouteImport } from './routes/providers.$providerId'
 
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RequestsRoute = RequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestRoute = RequestRouteImport.update({
   id: '/request',
   path: '/request',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProvidersRoute = ProvidersRouteImport.update({
-  id: '/providers',
-  path: '/providers',
+const MaterialsRoute = MaterialsRouteImport.update({
+  id: '/materials',
+  path: '/materials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -36,6 +49,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const ForProvidersRoute = ForProvidersRouteImport.update({
   id: '/for-providers',
   path: '/for-providers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillingRoute = BillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -62,20 +80,26 @@ const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/providers': typeof ProvidersRouteWithChildren
+  '/materials': typeof MaterialsRoute
   '/request': typeof RequestRouteWithChildren
+  '/requests': typeof RequestsRoute
+  '/sign-in': typeof SignInRoute
   '/providers/$providerId': typeof ProvidersProviderIdRoute
   '/request/success': typeof RequestSuccessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/providers': typeof ProvidersRouteWithChildren
+  '/materials': typeof MaterialsRoute
   '/request': typeof RequestRouteWithChildren
+  '/requests': typeof RequestsRoute
+  '/sign-in': typeof SignInRoute
   '/providers/$providerId': typeof ProvidersProviderIdRoute
   '/request/success': typeof RequestSuccessRoute
 }
@@ -83,10 +107,13 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/providers': typeof ProvidersRouteWithChildren
+  '/materials': typeof MaterialsRoute
   '/request': typeof RequestRouteWithChildren
+  '/requests': typeof RequestsRoute
+  '/sign-in': typeof SignInRoute
   '/providers/$providerId': typeof ProvidersProviderIdRoute
   '/request/success': typeof RequestSuccessRoute
 }
@@ -95,30 +122,39 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/billing'
     | '/for-providers'
     | '/how-it-works'
-    | '/providers'
+    | '/materials'
     | '/request'
+    | '/requests'
+    | '/sign-in'
     | '/providers/$providerId'
     | '/request/success'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/billing'
     | '/for-providers'
     | '/how-it-works'
-    | '/providers'
+    | '/materials'
     | '/request'
+    | '/requests'
+    | '/sign-in'
     | '/providers/$providerId'
     | '/request/success'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/billing'
     | '/for-providers'
     | '/how-it-works'
-    | '/providers'
+    | '/materials'
     | '/request'
+    | '/requests'
+    | '/sign-in'
     | '/providers/$providerId'
     | '/request/success'
   fileRoutesById: FileRoutesById
@@ -126,14 +162,31 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  BillingRoute: typeof BillingRoute
   ForProvidersRoute: typeof ForProvidersRoute
   HowItWorksRoute: typeof HowItWorksRoute
-  ProvidersRoute: typeof ProvidersRouteWithChildren
+  MaterialsRoute: typeof MaterialsRoute
   RequestRoute: typeof RequestRouteWithChildren
+  RequestsRoute: typeof RequestsRoute
+  SignInRoute: typeof SignInRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/requests': {
+      id: '/requests'
+      path: '/requests'
+      fullPath: '/requests'
+      preLoaderRoute: typeof RequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request': {
       id: '/request'
       path: '/request'
@@ -141,11 +194,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RequestRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/providers': {
-      id: '/providers'
-      path: '/providers'
-      fullPath: '/providers'
-      preLoaderRoute: typeof ProvidersRouteImport
+    '/materials': {
+      id: '/materials'
+      path: '/materials'
+      fullPath: '/materials'
+      preLoaderRoute: typeof MaterialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -160,6 +213,13 @@ declare module '@tanstack/react-router' {
       path: '/for-providers'
       fullPath: '/for-providers'
       preLoaderRoute: typeof ForProvidersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billing': {
+      id: '/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -193,18 +253,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface ProvidersRouteChildren {
-  ProvidersProviderIdRoute: typeof ProvidersProviderIdRoute
-}
-
-const ProvidersRouteChildren: ProvidersRouteChildren = {
-  ProvidersProviderIdRoute: ProvidersProviderIdRoute,
-}
-
-const ProvidersRouteWithChildren = ProvidersRoute._addFileChildren(
-  ProvidersRouteChildren,
-)
-
 interface RequestRouteChildren {
   RequestSuccessRoute: typeof RequestSuccessRoute
 }
@@ -219,11 +267,23 @@ const RequestRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  BillingRoute: BillingRoute,
   ForProvidersRoute: ForProvidersRoute,
   HowItWorksRoute: HowItWorksRoute,
-  ProvidersRoute: ProvidersRouteWithChildren,
+  MaterialsRoute: MaterialsRoute,
   RequestRoute: RequestRouteWithChildren,
+  RequestsRoute: RequestsRoute,
+  SignInRoute: SignInRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

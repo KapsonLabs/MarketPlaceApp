@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, ArrowRight, Upload, X, MapPin, User } from "lucide-react";
+import { Loader2, ArrowRight, Upload, X, MapPin, User, LockKeyhole } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { specialties, getProvider } from "@/data/providers";
-import { submitRequest } from "@/server/requests.functions";
+import { submitRequest } from "@/lib/requests.functions";
 import { useCurrentUser } from "@/lib/current-user";
 import { ClientOnly } from "@tanstack/react-router";
 import { LocationPicker, type PickedLocation } from "@/components/location-picker";
@@ -86,6 +86,10 @@ function RequestPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (!user) {
+      navigate({ to: "/sign-in", search: { redirect: "/request" } as never });
+      return;
+    }
     if (!location) {
       setError("Please share your location or drop a pin on the map.");
       return;
@@ -157,13 +161,35 @@ function RequestPage() {
       <SiteHeader />
       <main className="flex-1">
         <div className="container mx-auto max-w-3xl px-4 py-10">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            Request a service
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Request a service</h1>
           <p className="mt-2 text-muted-foreground">
-            Tell us what you need. We'll route it to the right pro and, if you're a
-            tenant, log it into your property's maintenance queue.
+            Tell us what you need. We'll route it to the right pro and, if you're a tenant, log it
+            into your property's maintenance queue.
           </p>
+
+          {!user && (
+            <Card className="mt-6 border-primary/40 bg-primary/5">
+              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <LockKeyhole className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-foreground">Sign in to continue</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Sign in with your marketplace account before a provider can be assigned at a
+                      fee.
+                    </p>
+                  </div>
+                </div>
+                <Button asChild className="shrink-0">
+                  <Link to="/sign-in" search={{ redirect: "/request" } as never}>
+                    Sign in
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           {preferred && (
             <Card className="mt-6 border-primary/40 bg-primary/5">
@@ -187,16 +213,30 @@ function RequestPage() {
                   <User className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-foreground">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {user.email}
-                    {user.audience === "tenant" && user.propertyCode && (
-                      <> • {user.propertyCode} / Unit {user.unitNumber}</>
-                    )}
-                  </p>
+                  {user ? (
+                    <>
+                      <p className="text-sm font-semibold text-foreground">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                        {user.audience === "tenant" && user.propertyCode && (
+                          <>
+                            {" "}
+                            • {user.propertyCode} / Unit {user.unitNumber}
+                          </>
+                        )}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold text-foreground">Guest user</p>
+                      <p className="text-xs text-muted-foreground">
+                        Sign in before submitting this service request.
+                      </p>
+                    </>
+                  )}
                 </div>
                 <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {user.audience}
+                  {user?.audience ?? "guest"}
                 </span>
               </CardContent>
             </Card>
@@ -206,14 +246,14 @@ function RequestPage() {
               <CardContent className="space-y-3 p-6">
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">
-                    Service location
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground">Service location</h2>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   We use your coordinates to dispatch the nearest provider.
                 </p>
-                <ClientOnly fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}>
+                <ClientOnly
+                  fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}
+                >
                   <LocationPicker value={location} onChange={setLocation} />
                 </ClientOnly>
               </CardContent>
@@ -225,10 +265,7 @@ function RequestPage() {
                 <h2 className="text-lg font-semibold text-foreground">The job</h2>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Service type" id="specialty">
-                    <Select
-                      value={form.specialty}
-                      onValueChange={(v) => update("specialty", v)}
-                    >
+                    <Select value={form.specialty} onValueChange={(v) => update("specialty", v)}>
                       <SelectTrigger id="specialty">
                         <SelectValue />
                       </SelectTrigger>
@@ -244,9 +281,7 @@ function RequestPage() {
                   <Field label="Priority" id="priority">
                     <Select
                       value={form.priority}
-                      onValueChange={(v) =>
-                        update("priority", v as typeof form.priority)
-                      }
+                      onValueChange={(v) => update("priority", v as typeof form.priority)}
                     >
                       <SelectTrigger id="priority">
                         <SelectValue />
@@ -288,9 +323,7 @@ function RequestPage() {
                     className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 p-6 text-center transition-colors hover:border-primary"
                   >
                     <Upload className="h-6 w-6 text-muted-foreground" />
-                    <p className="text-sm font-medium text-foreground">
-                      Click to upload photos
-                    </p>
+                    <p className="text-sm font-medium text-foreground">Click to upload photos</p>
                     <p className="text-xs text-muted-foreground">
                       JPG, PNG or WebP — up to 5 MB each, max {MAX_PHOTOS} photos
                     </p>
@@ -306,9 +339,7 @@ function RequestPage() {
                       }}
                     />
                   </label>
-                  {photoError && (
-                    <p className="text-xs text-destructive">{photoError}</p>
-                  )}
+                  {photoError && <p className="text-xs text-destructive">{photoError}</p>}
                   {photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                       {photos.map((p, i) => (
@@ -337,12 +368,10 @@ function RequestPage() {
               </CardContent>
             </Card>
 
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
 
             <div className="flex items-center justify-end gap-3">
-              <Button type="submit" size="lg" disabled={submitting}>
+              <Button type="submit" size="lg" disabled={submitting || !user}>
                 {submitting ? (
                   <>
                     <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…
