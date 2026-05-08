@@ -18,7 +18,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getProvider } from "@/data/providers";
+import { getProvider, providerCover, providerGallery } from "@/data/providers";
 
 export const Route = createFileRoute("/providers/$providerId")({
   loader: ({ params }) => {
@@ -50,6 +50,8 @@ export const Route = createFileRoute("/providers/$providerId")({
 
 function ProviderDetail() {
   const { provider: p } = Route.useLoaderData();
+  const cover = providerCover(p);
+  const gallery = providerGallery(p);
   const services = p.services ?? ["On-site assessment", "Material sourcing", "Photo job updates"];
   const certifications = p.certifications ?? [
     "Identity verified",
@@ -82,7 +84,46 @@ function ProviderDetail() {
             </Link>
           </Button>
 
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="overflow-hidden rounded-xl border border-border shadow-[var(--shadow-elegant)]">
+            <div className="relative h-56 w-full sm:h-72">
+              <img
+                src={cover}
+                alt={`${p.company} — ${p.specialty} services`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent" />
+              <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between gap-3">
+                <div>
+                  <Badge variant="secondary" className="mb-2">
+                    <Wrench className="mr-1 h-3 w-3" />
+                    {p.specialty}
+                  </Badge>
+                  <h1 className="text-2xl font-bold text-foreground sm:text-3xl">{p.company}</h1>
+                </div>
+                {p.verified && (
+                  <Badge variant="secondary" className="gap-1">
+                    <BadgeCheck className="h-3.5 w-3.5" /> Verified
+                  </Badge>
+                )}
+              </div>
+            </div>
+            {gallery.length > 1 && (
+              <div className="grid grid-cols-3 gap-1 bg-border">
+                {gallery.slice(0, 3).map((src: string, i: number) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`${p.company} work sample ${i + 1}`}
+                    className="h-24 w-full object-cover sm:h-32"
+                    loading="lazy"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card className="border-border">
                 <CardContent className="p-6">
@@ -91,13 +132,12 @@ function ProviderDetail() {
                       <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-primary text-xl font-bold text-primary-foreground">
                         {p.name
                           .split(" ")
-                          .map((part) => part[0])
+                          .map((part: string) => part[0])
                           .join("")
                           .slice(0, 2)}
                       </div>
                       <div>
-                        <h1 className="text-2xl font-bold text-foreground">{p.company}</h1>
-                        <p className="mt-1 text-sm text-muted-foreground">Lead pro: {p.name}</p>
+                        <p className="text-sm text-muted-foreground">Lead pro: {p.name}</p>
                         <div className="mt-3 flex flex-wrap gap-2">
                           <Badge variant="outline">
                             <Wrench className="mr-1 h-3 w-3" /> {p.specialty}
@@ -108,11 +148,6 @@ function ProviderDetail() {
                         </div>
                       </div>
                     </div>
-                    {p.verified && (
-                      <Badge variant="secondary" className="gap-1">
-                        <BadgeCheck className="h-3.5 w-3.5" /> Verified
-                      </Badge>
-                    )}
                   </div>
                   <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
@@ -130,7 +165,7 @@ function ProviderDetail() {
                   <p className="mt-6 leading-relaxed text-foreground">{p.bio}</p>
 
                   <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                    {services.slice(0, 6).map((service) => (
+                    {services.slice(0, 6).map((service: string) => (
                       <div
                         key={service}
                         className="rounded-lg border border-border bg-muted/30 p-3 text-sm font-medium text-foreground"
@@ -151,17 +186,17 @@ function ProviderDetail() {
 
               <div className="mt-6 grid gap-4 md:grid-cols-2">
                 <DetailPanel title="Credentials" icon={ShieldCheck}>
-                  {certifications.map((item) => (
+                  {certifications.map((item: string) => (
                     <DetailRow key={item}>{item}</DetailRow>
                   ))}
                 </DetailPanel>
                 <DetailPanel title="Coverage" icon={MapPin}>
-                  {serviceAreas.map((area) => (
+                  {serviceAreas.map((area: string) => (
                     <DetailRow key={area}>{area}</DetailRow>
                   ))}
                 </DetailPanel>
                 <DetailPanel title="Languages" icon={Languages}>
-                  {languages.map((language) => (
+                  {languages.map((language: string) => (
                     <DetailRow key={language}>{language}</DetailRow>
                   ))}
                 </DetailPanel>
@@ -184,7 +219,7 @@ function ProviderDetail() {
                     </div>
                   </div>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    {reviews.map((review) => (
+                    {reviews.map((review: typeof reviews[number]) => (
                       <Review key={review.id} review={review} />
                     ))}
                   </div>
