@@ -43,6 +43,7 @@ const statusTone: Record<RequestStatus, string> = {
 function RequestsPage() {
   const user = useCurrentUser();
   const [requests, setRequests] = useState<ForwardedMaintenanceRequest[]>([]);
+  const [paidAmounts, setPaidAmounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -50,7 +51,10 @@ function RequestsPage() {
     setLoading(true);
     startTransition(() => {
       listUserRequests({ data: { userId: user.id } })
-        .then((result) => setRequests(result.requests))
+        .then((result) => {
+          setRequests(result.requests);
+          setPaidAmounts(result.paidAmounts);
+        })
         .finally(() => setLoading(false));
     });
   }, [user]);
@@ -98,14 +102,18 @@ function RequestsPage() {
                 <SummaryCard
                   label="Outstanding balance"
                   value={`USh ${requests
-                    .reduce((sum, request) => sum + deriveBillingRecord(request).balance, 0)
+                    .reduce(
+                      (sum, request) =>
+                        sum + deriveBillingRecord(request, paidAmounts[request.id] ?? 0).balance,
+                      0,
+                    )
                     .toLocaleString()}`}
                 />
               </div>
 
               <div className="mt-8 space-y-4">
                 {requests.map((request) => {
-                  const invoice = deriveBillingRecord(request);
+                  const invoice = deriveBillingRecord(request, paidAmounts[request.id] ?? 0);
                   return (
                     <Card key={request.id} className="border-border">
                       <CardContent className="p-6">
@@ -139,7 +147,10 @@ function RequestsPage() {
                               </span>
                             </div>
                           </div>
-                          <div className="rounded-lg border border-border bg-card p-4 text-right">
+                          <Link
+                            to="/billing"
+                            className="rounded-lg border border-border bg-card p-4 text-right transition-colors hover:border-primary"
+                          >
                             <p className="text-xs text-muted-foreground">Outstanding balance</p>
                             <p className="mt-1 text-2xl font-semibold text-foreground">
                               USh {invoice.balance.toLocaleString()}
@@ -147,40 +158,49 @@ function RequestsPage() {
                             <p className="mt-1 text-xs text-muted-foreground">
                               Total job fee: USh {invoice.total.toLocaleString()}
                             </p>
-                          </div>
+                            <p className="mt-2 text-xs font-medium text-primary">View invoice →</p>
+                          </Link>
                         </div>
 
-                        <div className="mt-6 grid gap-2 sm:grid-cols-5">
-                          {REQUEST_PROGRESS_STEPS.map((step, index) => {
-                            const currentIndex = REQUEST_PROGRESS_STEPS.indexOf(request.status);
-                            const active = currentIndex >= index;
-                            return (
-                              <div
-                                key={step}
-                                className={
-                                  "rounded-lg border p-3 text-sm " +
-                                  (active
-                                    ? "border-primary bg-primary/5 text-foreground"
-                                    : "border-border bg-background text-muted-foreground")
-                                }
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span
-                                    className={
-                                      "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold " +
-                                      (active
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-muted text-muted-foreground")
-                                    }
-                                  >
-                                    {index + 1}
-                                  </span>
-                                  <span>{step}</span>
+                        {request.status === "Cancelled" ? (
+                          <div className="mt-6 rounded-lg border border-border bg-muted/30 p-4">
+                            <p className="text-sm font-medium text-muted-foreground">
+                              This request was cancelled and will not be progressed further.
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="mt-6 grid gap-2 sm:grid-cols-5">
+                            {REQUEST_PROGRESS_STEPS.map((step, index) => {
+                              const currentIndex = REQUEST_PROGRESS_STEPS.indexOf(request.status);
+                              const active = currentIndex >= index;
+                              return (
+                                <div
+                                  key={step}
+                                  className={
+                                    "rounded-lg border p-3 text-sm " +
+                                    (active
+                                      ? "border-primary bg-primary/5 text-foreground"
+                                      : "border-border bg-background text-muted-foreground")
+                                  }
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className={
+                                        "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold " +
+                                        (active
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-muted text-muted-foreground")
+                                      }
+                                    >
+                                      {index + 1}
+                                    </span>
+                                    <span>{step}</span>
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+                          </div>
+                        )}
 
                         {request.notes && (
                           <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">

@@ -5,7 +5,10 @@ import {
   listRequests,
   updateRequestStatus,
   mapSpecialtyToCategory,
+  addPayment,
+  getTotalPaidForRequest,
 } from "../server/requests.server";
+import type { PaymentRecord } from "@/lib/request-types";
 import { REQUEST_STATUSES } from "@/lib/request-types";
 import { deriveBillingRecord } from "@/lib/billing";
 import type { ForwardedMaintenanceRequest, RequestStatus } from "@/lib/request-types";
@@ -94,18 +97,41 @@ const userRequestsSchema = z.object({
 export const listUserRequests = createServerFn({ method: "GET" })
   .inputValidator((input) => userRequestsSchema.parse(input))
   .handler(async ({ data }) => {
-    return {
-      requests: listRequests().filter((request) => request.userId === data.userId),
-    };
+    const requests = listRequests().filter((r) => r.userId === data.userId);
+    const paidAmounts: Record<string, number> = {};
+    for (const r of requests) {
+      paidAmounts[r.id] = getTotalPaidForRequest(r.id);
+    }
+    return { requests, paidAmounts };
   });
 
 export const listUserBilling = createServerFn({ method: "GET" })
   .inputValidator((input) => userRequestsSchema.parse(input))
   .handler(async ({ data }) => {
     const invoices: BillingRecord[] = listRequests()
-      .filter((request) => request.userId === data.userId)
-      .map((request) => deriveBillingRecord(request));
+      .filter((r) => r.userId === data.userId)
+      .map((r) => deriveBillingRecord(r, getTotalPaidForRequest(r.id)));
     return { invoices };
+  });
+
+const paymentSchema = z.object({
+  requestId: z.string().min(1).max(60),
+  amount: z.number().int().positive(),
+  type: z.enum(["deposit", "final"]),
+});
+
+export const recordPayment = createServerFn({ method: "POST" })
+  .inputValidator((input) => paymentSchema.parse(input))
+  .handler(async ({ data }) => {
+    const payment: PaymentRecord = {
+      id: `pay-${Date.now().toString(36)}`,
+      requestId: data.requestId,
+      amount: data.amount,
+      type: data.type,
+      paidAt: new Date().toISOString(),
+    };
+    addPayment(payment);
+    return { ok: true };
   });
 
 const statusSchema = z.object({

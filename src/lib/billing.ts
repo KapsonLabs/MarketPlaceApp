@@ -36,31 +36,30 @@ const PRIORITY_SURCHARGE: Record<ForwardedMaintenanceRequest["priority"], number
   Emergency: 75000,
 };
 
-export function deriveBillingStatus(requestStatus: RequestStatus): BillingStatus {
-  switch (requestStatus) {
-    case "Open":
-    case "Triaged":
-      return "Estimate";
-    case "Assigned":
-      return "Pending";
-    case "InProgress":
-      return "PartiallyPaid";
-    case "Completed":
-      return "Paid";
-    case "Cancelled":
-      return "Cancelled";
-  }
+export function deriveBillingStatus(
+  requestStatus: RequestStatus,
+  paidAmount: number,
+  total: number,
+): BillingStatus {
+  if (requestStatus === "Cancelled") return "Cancelled";
+  if (requestStatus === "Open" || requestStatus === "Triaged") return "Estimate";
+  // Job is assigned or further — payment is now expected
+  if (paidAmount >= total) return "Paid";
+  if (paidAmount > 0) return "PartiallyPaid";
+  return "Pending";
 }
 
-export function deriveBillingRecord(request: ForwardedMaintenanceRequest): BillingRecord {
+export function deriveBillingRecord(
+  request: ForwardedMaintenanceRequest,
+  paidAmount = 0,
+): BillingRecord {
   const serviceVisit = BASE_CATEGORY_PRICING[request.category];
   const priorityFee = PRIORITY_SURCHARGE[request.priority];
   const marketplaceFee = Math.round(serviceVisit * 0.08);
   const materialsAllowance = request.preferredProviderId ? 30000 : 18000;
   const total = serviceVisit + priorityFee + marketplaceFee + materialsAllowance;
-  const status = deriveBillingStatus(request.status);
-  const paidAmount =
-    status === "Paid" ? total : status === "PartiallyPaid" ? Math.round(total * 0.4) : 0;
+  const clamped = Math.min(paidAmount, total);
+  const status = deriveBillingStatus(request.status, clamped, total);
 
   return {
     id: `inv-${request.id}`,
@@ -70,8 +69,8 @@ export function deriveBillingRecord(request: ForwardedMaintenanceRequest): Billi
     issuedAt: request.updatedAt,
     dueAt: new Date(new Date(request.updatedAt).getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
     total,
-    paidAmount,
-    balance: total - paidAmount,
+    paidAmount: clamped,
+    balance: total - clamped,
     lineItems: [
       { label: `${request.category} service visit`, amount: serviceVisit },
       { label: `${request.priority} priority handling`, amount: priorityFee },

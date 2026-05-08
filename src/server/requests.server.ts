@@ -4,12 +4,14 @@ import type {
   RequestCategory,
   RequestStatus,
   ForwardedMaintenanceRequest,
+  PaymentRecord,
 } from "@/lib/request-types";
 
 export type {
   RequestCategory,
   RequestStatus,
   ForwardedMaintenanceRequest,
+  PaymentRecord,
 } from "@/lib/request-types";
 export { REQUEST_STATUSES } from "@/lib/request-types";
 export type { RequestPhoto, RequestLocation } from "@/lib/request-types";
@@ -161,4 +163,16 @@ export function updateRequestStatus(
 export function mapSpecialtyToCategory(s: Specialty): RequestCategory {
   if (s === "Cleaning" || s === "Painting" || s === "Landscaping") return "Other";
   return s;
+}
+
+const payments: PaymentRecord[] = [];
+
+export function addPayment(p: PaymentRecord): void {
+  payments.push(p);
+}
+
+export function getTotalPaidForRequest(requestId: string): number {
+  return payments
+    .filter((p) => p.requestId === requestId)
+    .reduce((sum, p) => sum + p.amount, 0);
 }

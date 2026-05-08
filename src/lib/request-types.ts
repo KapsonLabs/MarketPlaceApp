@@ -37,6 +37,14 @@ export interface RequestLocation {
   address?: string;
 }
 
+export interface PaymentRecord {
+  id: string;
+  requestId: string;
+  amount: number;
+  type: "deposit" | "final";
+  paidAt: string;
+}
+
 export interface ForwardedMaintenanceRequest {
   id: string;
   propertyId: string | null;

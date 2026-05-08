@@ -40,6 +40,11 @@ function SignInPage() {
     password: "",
   });
 
+  function handleModeChange(value: "login" | "create") {
+    setMode(value);
+    setForm({ name: "", email: "", phone: "", password: "" });
+  }
+
   const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
 
@@ -101,7 +106,7 @@ function SignInPage() {
 
           <Card className="border-border shadow-[var(--shadow-elegant)]">
             <CardContent className="p-6">
-              <Tabs value={mode} onValueChange={(value) => setMode(value as typeof mode)}>
+              <Tabs value={mode} onValueChange={(value) => handleModeChange(value as typeof mode)}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="login">Log in</TabsTrigger>
                   <TabsTrigger value="create">Create account</TabsTrigger>

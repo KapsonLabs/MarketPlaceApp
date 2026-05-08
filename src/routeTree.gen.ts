@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RequestRouteImport } from './routes/request'
+import { Route as ProvidersRouteImport } from './routes/providers'
 import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForProvidersRouteImport } from './routes/for-providers'
@@ -34,6 +35,11 @@ const RequestsRoute = RequestsRouteImport.update({
 const RequestRoute = RequestRouteImport.update({
   id: '/request',
   path: '/request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProvidersRoute = ProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MaterialsRoute = MaterialsRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/materials': typeof MaterialsRoute
+  '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
   '/sign-in': typeof SignInRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/materials': typeof MaterialsRoute
+  '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
   '/sign-in': typeof SignInRoute
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/materials': typeof MaterialsRoute
+  '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
   '/sign-in': typeof SignInRoute
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/for-providers'
     | '/how-it-works'
     | '/materials'
+    | '/providers'
     | '/request'
     | '/requests'
     | '/sign-in'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/for-providers'
     | '/how-it-works'
     | '/materials'
+    | '/providers'
     | '/request'
     | '/requests'
     | '/sign-in'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/for-providers'
     | '/how-it-works'
     | '/materials'
+    | '/providers'
     | '/request'
     | '/requests'
     | '/sign-in'
@@ -166,6 +178,7 @@ export interface RootRouteChildren {
   ForProvidersRoute: typeof ForProvidersRoute
   HowItWorksRoute: typeof HowItWorksRoute
   MaterialsRoute: typeof MaterialsRoute
+  ProvidersRoute: typeof ProvidersRouteWithChildren
   RequestRoute: typeof RequestRouteWithChildren
   RequestsRoute: typeof RequestsRoute
   SignInRoute: typeof SignInRoute
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       path: '/request'
       fullPath: '/request'
       preLoaderRoute: typeof RequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/providers': {
+      id: '/providers'
+      path: '/providers'
+      fullPath: '/providers'
+      preLoaderRoute: typeof ProvidersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/materials': {
@@ -253,6 +273,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ProvidersRouteChildren {
+  ProvidersProviderIdRoute: typeof ProvidersProviderIdRoute
+}
+
+const ProvidersRouteChildren: ProvidersRouteChildren = {
+  ProvidersProviderIdRoute: ProvidersProviderIdRoute,
+}
+
+const ProvidersRouteWithChildren = ProvidersRoute._addFileChildren(
+  ProvidersRouteChildren,
+)
+
 interface RequestRouteChildren {
   RequestSuccessRoute: typeof RequestSuccessRoute
 }
@@ -271,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForProvidersRoute: ForProvidersRoute,
   HowItWorksRoute: HowItWorksRoute,
   MaterialsRoute: MaterialsRoute,
+  ProvidersRoute: ProvidersRouteWithChildren,
   RequestRoute: RequestRouteWithChildren,
   RequestsRoute: RequestsRoute,
   SignInRoute: SignInRoute,

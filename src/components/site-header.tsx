@@ -67,13 +67,6 @@ export function SiteHeader() {
           >
             For providers
           </Link>
-          <Link
-            to="/admin"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            activeProps={{ className: "text-sm font-medium text-foreground" }}
-          >
-            Admin
-          </Link>
         </nav>
         <div className="flex items-center gap-2">
           {user ? (

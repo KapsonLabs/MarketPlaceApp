@@ -3,7 +3,7 @@ import { startTransition, useEffect, useState } from "react";
 import { ArrowRight, CreditCard, Loader2, ReceiptText, Wallet } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { useCurrentUser } from "@/lib/current-user";
-import { listUserBilling } from "@/lib/requests.functions";
+import { listUserBilling, recordPayment } from "@/lib/requests.functions";
 import type { BillingRecord, BillingStatus } from "@/lib/billing";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -34,6 +34,16 @@ function BillingPage() {
   const user = useCurrentUser();
   const [invoices, setInvoices] = useState<BillingRecord[]>([]);
   const [loading, setLoading] = useState(false);
+  const [paying, setPaying] = useState<string | null>(null);
+
+  function reload() {
+    if (!user) return;
+    startTransition(() => {
+      listUserBilling({ data: { userId: user.id } }).then((result) =>
+        setInvoices(result.invoices),
+      );
+    });
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -44,6 +54,19 @@ function BillingPage() {
         .finally(() => setLoading(false));
     });
   }, [user]);
+
+  async function handlePay(invoice: BillingRecord) {
+    const isDeposit = invoice.status === "Pending";
+    const amount = isDeposit ? Math.round(invoice.total * 0.4) : invoice.balance;
+    const type = isDeposit ? "deposit" : "final";
+    setPaying(invoice.id);
+    try {
+      await recordPayment({ data: { requestId: invoice.requestId, amount, type } });
+      reload();
+    } finally {
+      setPaying(null);
+    }
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -105,8 +128,14 @@ function BillingPage() {
                             </Badge>
                           </div>
                           <p className="mt-2 text-xs font-mono text-muted-foreground">
-                            {invoice.id} • Request {invoice.requestId}
+                            {invoice.id}
                           </p>
+                          <Link
+                            to="/requests"
+                            className="mt-1 inline-block text-xs font-medium text-primary hover:underline"
+                          >
+                            View request {invoice.requestId} →
+                          </Link>
                           <p className="mt-2 text-sm text-muted-foreground">
                             Issued {new Date(invoice.issuedAt).toLocaleDateString()} • Due{" "}
                             {new Date(invoice.dueAt).toLocaleDateString()}
@@ -137,6 +166,37 @@ function BillingPage() {
                           </div>
                         ))}
                       </div>
+
+                      {(invoice.status === "Pending" || invoice.status === "PartiallyPaid") && (
+                        <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border border-primary/30 bg-primary/5 px-5 py-4">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">
+                              {invoice.status === "Pending"
+                                ? "Pay deposit to confirm job start"
+                                : "Pay remaining balance to close job"}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Amount due: USh {invoice.balance.toLocaleString()}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={paying === invoice.id}
+                            onClick={() => handlePay(invoice)}
+                          >
+                            {paying === invoice.id ? (
+                              <>
+                                <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
+                                Processing…
+                              </>
+                            ) : invoice.status === "Pending" ? (
+                              "Pay deposit"
+                            ) : (
+                              "Pay in full"
+                            )}
+                          </Button>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
