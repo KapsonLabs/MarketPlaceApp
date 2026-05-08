@@ -29,6 +29,8 @@ export interface Provider {
   services?: string[];
   availability?: string;
   profileReviews?: ProviderReview[];
+  coverImage?: string;
+  gallery?: string[];
 }
 
 export interface ProviderReview {
@@ -293,4 +295,39 @@ export const specialties: Specialty[] = [
 
 export function getProvider(id: string): Provider | undefined {
   return providers.find((p) => p.id === id);
+}
+
+// Stable, keyword-themed images per specialty (Unsplash CDN, fixed IDs).
+export const SPECIALTY_IMAGES: Record<Specialty, string> = {
+  Plumbing:
+    "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=1200&q=70",
+  Electrical:
+    "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=1200&q=70",
+  HVAC: "https://images.unsplash.com/photo-1631545308456-15bbf41a1d62?auto=format&fit=crop&w=1200&q=70",
+  Appliance:
+    "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=1200&q=70",
+  Structural:
+    "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=70",
+  Cleaning:
+    "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=70",
+  Painting:
+    "https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=1200&q=70",
+  Landscaping:
+    "https://images.unsplash.com/photo-1599629954294-14df9ec8bc34?auto=format&fit=crop&w=1200&q=70",
+  Other:
+    "https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?auto=format&fit=crop&w=1200&q=70",
+};
+
+export function providerCover(p: Provider): string {
+  return p.coverImage ?? SPECIALTY_IMAGES[p.specialty];
+}
+
+export function providerGallery(p: Provider): string[] {
+  if (p.gallery && p.gallery.length) return p.gallery;
+  // Use specialty hero + two generic worksite shots so every profile shows a gallery.
+  return [
+    SPECIALTY_IMAGES[p.specialty],
+    "https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=900&q=70",
+    "https://images.unsplash.com/photo-1503389152951-9f343605f61e?auto=format&fit=crop&w=900&q=70",
+  ];
 }

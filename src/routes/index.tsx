@@ -14,7 +14,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { providers, specialties } from "@/data/providers";
+import { providers, specialties, SPECIALTY_IMAGES, providerCover } from "@/data/providers";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -114,15 +114,24 @@ function Landing() {
               <Card className="border-border shadow-[var(--shadow-elegant)]">
                 <CardContent className="p-6">
                   <p className="text-sm font-medium text-muted-foreground">Popular services</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                     {specialties.slice(0, 8).map((s) => (
                       <Link
                         key={s}
                         to="/providers"
                         search={{ specialty: s } as never}
-                        className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-primary hover:text-primary"
+                        className="group relative aspect-[4/3] overflow-hidden rounded-lg border border-border"
                       >
-                        {s}
+                        <img
+                          src={SPECIALTY_IMAGES[s]}
+                          alt={`${s} services`}
+                          loading="lazy"
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-foreground/85 via-foreground/20 to-transparent" />
+                        <span className="absolute inset-x-0 bottom-1.5 text-center text-xs font-semibold text-background">
+                          {s}
+                        </span>
                       </Link>
                     ))}
                   </div>
@@ -132,10 +141,16 @@ function Landing() {
                         key={p.id}
                         to="/providers/$providerId"
                         params={{ providerId: p.id }}
-                        className="flex items-center justify-between rounded-lg border border-border bg-background px-4 py-3 transition-all hover:border-primary"
+                        className="flex items-center gap-3 rounded-lg border border-border bg-background p-2 pr-4 transition-all hover:border-primary"
                       >
-                        <div>
-                          <p className="text-sm font-semibold text-foreground">{p.company}</p>
+                        <img
+                          src={providerCover(p)}
+                          alt={p.company}
+                          loading="lazy"
+                          className="h-12 w-16 shrink-0 rounded-md object-cover"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">{p.company}</p>
                           <p className="text-xs text-muted-foreground">
                             {p.specialty} • {p.city}
                           </p>
