@@ -441,8 +441,7 @@ function RequestPage() {
                       label="Location"
                       value={
                         location
-                          ? location.address ??
-                            `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
+                          ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
                           : "—"
                       }
                       full
