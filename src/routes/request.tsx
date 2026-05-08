@@ -1,7 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, ArrowRight, Upload, X, MapPin, User, LockKeyhole } from "lucide-react";
+import {
+  Loader2,
+  ArrowRight,
+  ArrowLeft,
+  Upload,
+  X,
+  MapPin,
+  User,
+  LockKeyhole,
+  Wrench,
+  ClipboardCheck,
+  Check,
+} from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { specialties, getProvider } from "@/data/providers";
+import { specialties, getProvider, providerCover } from "@/data/providers";
 import { submitRequest } from "@/lib/requests.functions";
 import { useCurrentUser } from "@/lib/current-user";
 import { ClientOnly } from "@tanstack/react-router";
@@ -72,6 +84,7 @@ function RequestPage() {
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [location, setLocation] = useState<PickedLocation | null>(null);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
 
   const [form, setForm] = useState({
     specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
@@ -82,6 +95,30 @@ function RequestPage() {
 
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
+
+  const stepValid =
+    step === 0
+      ? form.title.trim().length >= 3 && form.description.trim().length >= 10
+      : step === 1
+        ? !!location
+        : true;
+
+  function nextStep() {
+    setError(null);
+    if (!stepValid) {
+      setError(
+        step === 0
+          ? "Add a short title and a description (10+ characters)."
+          : "Share your location or drop a pin to continue.",
+      );
+      return;
+    }
+    setStep((s) => (s < 2 ? ((s + 1) as 0 | 1 | 2) : s));
+  }
+  function prevStep() {
+    setError(null);
+    setStep((s) => (s > 0 ? ((s - 1) as 0 | 1 | 2) : s));
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -167,6 +204,8 @@ function RequestPage() {
             into your property's maintenance queue.
           </p>
 
+          <Stepper step={step} />
+
           {!user && (
             <Card className="mt-6 border-primary/40 bg-primary/5">
               <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -193,8 +232,14 @@ function RequestPage() {
 
           {preferred && (
             <Card className="mt-6 border-primary/40 bg-primary/5">
-              <CardContent className="flex items-center justify-between p-4">
-                <div>
+              <CardContent className="flex items-center gap-4 p-4">
+                <img
+                  src={providerCover(preferred)}
+                  alt={preferred.company}
+                  className="h-12 w-16 rounded-md object-cover"
+                  loading="lazy"
+                />
+                <div className="flex-1">
                   <p className="text-xs text-muted-foreground">Requested provider</p>
                   <p className="font-semibold text-foreground">{preferred.company}</p>
                 </div>
@@ -241,25 +286,8 @@ function RequestPage() {
               </CardContent>
             </Card>
 
-            {/* Location */}
-            <Card className="border-border">
-              <CardContent className="space-y-3 p-6">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">Service location</h2>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  We use your coordinates to dispatch the nearest provider.
-                </p>
-                <ClientOnly
-                  fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}
-                >
-                  <LocationPicker value={location} onChange={setLocation} />
-                </ClientOnly>
-              </CardContent>
-            </Card>
-
-            {/* Job */}
+            {/* Step 0 — Job */}
+            {step === 0 && (
             <Card className="border-border">
               <CardContent className="space-y-4 p-6">
                 <h2 className="text-lg font-semibold text-foreground">The job</h2>
@@ -315,8 +343,32 @@ function RequestPage() {
                     onChange={(e) => update("description", e.target.value)}
                   />
                 </Field>
+              </CardContent>
+            </Card>
+            )}
 
-                <div className="space-y-2">
+            {/* Step 1 — Location & photos */}
+            {step === 1 && (
+            <>
+            <Card className="border-border">
+              <CardContent className="space-y-3 p-6">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">Service location</h2>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  We use your coordinates to dispatch the nearest provider.
+                </p>
+                <ClientOnly
+                  fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}
+                >
+                  <LocationPicker value={location} onChange={setLocation} />
+                </ClientOnly>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border">
+              <CardContent className="space-y-2 p-6">
                   <Label htmlFor="photos">Photos (optional)</Label>
                   <label
                     htmlFor="photos"
@@ -364,29 +416,152 @@ function RequestPage() {
                       ))}
                     </div>
                   )}
-                </div>
               </CardContent>
             </Card>
+            </>
+            )}
+
+            {/* Step 2 — Review */}
+            {step === 2 && (
+              <Card className="border-border">
+                <CardContent className="space-y-4 p-6">
+                  <div className="flex items-center gap-2">
+                    <ClipboardCheck className="h-4 w-4 text-primary" />
+                    <h2 className="text-lg font-semibold text-foreground">Review your request</h2>
+                  </div>
+                  <dl className="grid gap-3 sm:grid-cols-2">
+                    <ReviewRow label="Service" value={form.specialty} />
+                    <ReviewRow label="Priority" value={form.priority} />
+                    <ReviewRow label="Title" value={form.title || "—"} />
+                    <ReviewRow
+                      label="Provider"
+                      value={preferred ? preferred.company : "Auto-match"}
+                    />
+                    <ReviewRow
+                      label="Location"
+                      value={
+                        location
+                          ? location.address ??
+                            `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
+                          : "—"
+                      }
+                      full
+                    />
+                    <ReviewRow label="Description" value={form.description || "—"} full />
+                  </dl>
+                  {photos.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Photos ({photos.length})
+                      </p>
+                      <div className="grid grid-cols-5 gap-2">
+                        {photos.map((p, i) => (
+                          <img
+                            key={i}
+                            src={p.dataUrl}
+                            alt={p.name}
+                            className="aspect-square w-full rounded-md border border-border object-cover"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <div className="flex items-center justify-end gap-3">
-              <Button type="submit" size="lg" disabled={submitting || !user}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…
-                  </>
-                ) : (
-                  <>
-                    Submit request <ArrowRight className="ml-1 h-4 w-4" />
-                  </>
-                )}
+            <div className="flex items-center justify-between gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={prevStep}
+                disabled={step === 0}
+              >
+                <ArrowLeft className="mr-1 h-4 w-4" /> Back
               </Button>
+              {step < 2 ? (
+                <Button type="button" size="lg" onClick={nextStep}>
+                  Continue <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button type="submit" size="lg" disabled={submitting || !user || !location}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…
+                    </>
+                  ) : (
+                    <>
+                      Submit request <Check className="ml-1 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </form>
         </div>
       </main>
       <SiteFooter />
+    </div>
+  );
+}
+
+function Stepper({ step }: { step: 0 | 1 | 2 }) {
+  const steps = [
+    { label: "Job details", icon: Wrench },
+    { label: "Location & photos", icon: MapPin },
+    { label: "Review & submit", icon: ClipboardCheck },
+  ];
+  return (
+    <ol className="mt-8 grid grid-cols-3 gap-2">
+      {steps.map((s, i) => {
+        const active = step === i;
+        const done = step > i;
+        return (
+          <li
+            key={s.label}
+            className={
+              "flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors " +
+              (active
+                ? "border-primary bg-primary/5 text-foreground"
+                : done
+                  ? "border-primary/30 bg-primary/5 text-muted-foreground"
+                  : "border-border bg-background text-muted-foreground")
+            }
+          >
+            <span
+              className={
+                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold " +
+                (done || active
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground")
+              }
+            >
+              {done ? <Check className="h-4 w-4" /> : i + 1}
+            </span>
+            <span className="truncate font-medium">{s.label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function ReviewRow({
+  label,
+  value,
+  full,
+}: {
+  label: string;
+  value: string;
+  full?: boolean;
+}) {
+  return (
+    <div className={full ? "sm:col-span-2" : undefined}>
+      <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</dt>
+      <dd className="mt-1 whitespace-pre-wrap text-sm text-foreground">{value}</dd>
     </div>
   );
 }
