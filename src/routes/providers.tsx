@@ -5,7 +5,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { providers, specialties, type Specialty } from "@/data/providers";
+import { providers, specialties, providerCover, type Specialty } from "@/data/providers";
 
 const searchSchema = z.object({
   specialty: z.string().optional(),
@@ -118,8 +118,19 @@ function ProvidersPage() {
               {list.map((p) => (
                 <Card
                   key={p.id}
-                  className="border-border transition-shadow hover:shadow-[var(--shadow-elegant)]"
+                  className="overflow-hidden border-border transition-shadow hover:shadow-[var(--shadow-elegant)]"
                 >
+                  <div className="relative h-40 w-full overflow-hidden bg-muted">
+                    <img
+                      src={providerCover(p)}
+                      alt={`${p.company} — ${p.specialty}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                    <Badge variant="secondary" className="absolute left-3 top-3">
+                      {p.specialty}
+                    </Badge>
+                  </div>
                   <CardContent className="flex h-full flex-col p-5">
                     <div className="flex items-start gap-4">
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-primary text-base font-bold text-primary-foreground">
@@ -138,10 +149,6 @@ function ProvidersPage() {
                         </div>
                         <p className="text-xs text-muted-foreground">{p.name}</p>
                       </div>
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <Badge variant="outline">{p.specialty}</Badge>
                     </div>
 
                     <div className="mt-3 space-y-1.5 text-xs text-muted-foreground">
