@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProvider, providerCover, providerGallery } from "@/data/providers";
 import { listReviewsForProvider } from "@/lib/requests.functions";
+import type { RequestReview } from "@/lib/request-types";
 
 export const Route = createFileRoute("/providers/$providerId")({
   loader: async ({ params }) => {
@@ -77,7 +78,7 @@ function ProviderDetail() {
         "Professional service, clear communication and tidy handover after the job was completed.",
     },
   ];
-  const marketplaceMapped = (marketplaceReviews ?? []).map((r, i) => ({
+  const marketplaceMapped = (marketplaceReviews ?? []).map((r: RequestReview, i: number) => ({
     id: `mkt-review-${i}`,
     author: r.author,
     role: "Marketplace customer",
