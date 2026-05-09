@@ -275,6 +275,37 @@ function RequestPage() {
 
           <Stepper step={step} />
 
+          {resumed && (
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+              <span className="text-foreground">
+                Resumed your saved draft from this device.
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.localStorage.removeItem(DRAFT_KEY);
+                  }
+                  setResumed(false);
+                  setForm({
+                    specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
+                    title: "",
+                    description: "",
+                    priority: "Medium",
+                  });
+                  setLocation(null);
+                  setPhotos([]);
+                  setStep(0);
+                  setStepHistory([{ step: "job", at: new Date().toISOString() }]);
+                }}
+              >
+                Discard draft
+              </Button>
+            </div>
+          )}
+
           {!user && (
             <Card className="mt-6 border-primary/40 bg-primary/5">
               <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
