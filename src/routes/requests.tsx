@@ -219,6 +219,14 @@ function RequestsPage() {
                             <p className="mt-2 text-sm text-foreground">{request.notes}</p>
                           </div>
                         )}
+
+                        <OrderHistory request={request} />
+
+                        <ReviewSection
+                          request={request}
+                          author={user?.name ?? "Customer"}
+                          onSubmitted={reload}
+                        />
                       </CardContent>
                     </Card>
                   );
