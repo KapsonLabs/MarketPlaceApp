@@ -8,15 +8,19 @@ import {
   Loader2,
   MapPin,
   ReceiptText,
+  History,
+  Star,
+  MessageSquareText,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { useCurrentUser } from "@/lib/current-user";
-import { listUserRequests } from "@/lib/requests.functions";
+import { listUserRequests, submitReview } from "@/lib/requests.functions";
 import { REQUEST_PROGRESS_STEPS, deriveBillingRecord } from "@/lib/billing";
 import type { ForwardedMaintenanceRequest, RequestStatus } from "@/lib/request-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/requests")({
   head: () => ({
