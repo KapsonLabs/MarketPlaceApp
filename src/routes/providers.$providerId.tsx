@@ -20,12 +20,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProvider, providerCover, providerGallery } from "@/data/providers";
+import { listReviewsForProvider } from "@/lib/requests.functions";
 
 export const Route = createFileRoute("/providers/$providerId")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const provider = getProvider(params.providerId);
     if (!provider) throw notFound();
-    return { provider };
+    const { reviews: marketplaceReviews } = await listReviewsForProvider({
+      data: { providerId: provider.id },
+    });
+    return { provider, marketplaceReviews };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
