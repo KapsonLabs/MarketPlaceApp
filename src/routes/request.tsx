@@ -273,7 +273,14 @@ function RequestPage() {
             into your property's maintenance queue.
           </p>
 
-          <Stepper step={step} />
+          <Stepper step={step} history={stepHistory} onJump={(i) => {
+            // allow jumping back to any previously visited step
+            const visited = stepHistory.some((e) => e.step === STEP_NAMES[i]);
+            if (visited && i <= 2) {
+              setStep(i as 0 | 1 | 2);
+              setError(null);
+            }
+          }} />
 
           {resumed && (
             <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
@@ -607,44 +614,101 @@ function RequestPage() {
   );
 }
 
-function Stepper({ step }: { step: 0 | 1 | 2 }) {
+function Stepper({
+  step,
+  history,
+  onJump,
+}: {
+  step: 0 | 1 | 2;
+  history: RequestStepHistoryEntry[];
+  onJump: (i: number) => void;
+}) {
   const steps = [
-    { label: "Job details", icon: Wrench },
-    { label: "Location & photos", icon: MapPin },
-    { label: "Review & submit", icon: ClipboardCheck },
+    { label: "Job details", icon: Wrench, key: "job" as const, hint: "What needs fixing" },
+    { label: "Location & photos", icon: MapPin, key: "location" as const, hint: "Where & evidence" },
+    { label: "Review & submit", icon: ClipboardCheck, key: "review" as const, hint: "Confirm & send" },
   ];
+
+  const visitedIndex = (key: (typeof steps)[number]["key"]) =>
+    history.findIndex((e) => e.step === key);
+
+  // Furthest step reached so far (by stepHistory). 0..2 within the wizard.
+  const furthest = steps.reduce(
+    (max, s, i) => (visitedIndex(s.key) >= 0 ? Math.max(max, i) : max),
+    0,
+  );
+
+  const fmt = (iso: string) =>
+    new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
   return (
-    <ol className="mt-8 grid grid-cols-3 gap-2">
-      {steps.map((s, i) => {
-        const active = step === i;
-        const done = step > i;
-        return (
-          <li
-            key={s.label}
-            className={
-              "flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors " +
-              (active
-                ? "border-primary bg-primary/5 text-foreground"
-                : done
-                  ? "border-primary/30 bg-primary/5 text-muted-foreground"
-                  : "border-border bg-background text-muted-foreground")
-            }
-          >
-            <span
-              className={
-                "flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold " +
-                (done || active
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground")
-              }
-            >
-              {done ? <Check className="h-4 w-4" /> : i + 1}
-            </span>
-            <span className="truncate font-medium">{s.label}</span>
-          </li>
-        );
-      })}
-    </ol>
+    <div className="mt-8">
+      <ol className="relative grid grid-cols-3 gap-3">
+        {/* connector line behind the circles */}
+        <div
+          className="pointer-events-none absolute left-[16.66%] right-[16.66%] top-4 h-0.5 -translate-y-1/2 bg-border"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute left-[16.66%] top-4 h-0.5 -translate-y-1/2 bg-primary transition-all"
+          style={{ width: `${(furthest / 2) * 66.66}%` }}
+          aria-hidden
+        />
+        {steps.map((s, i) => {
+          const Icon = s.icon;
+          const active = step === i;
+          const done = furthest > i;
+          const visited = visitedIndex(s.key) >= 0;
+          const lastSeen = visited ? history.filter((h) => h.step === s.key).at(-1) : undefined;
+          const isLastReached = furthest === i && !active;
+
+          return (
+            <li key={s.label} className="relative flex flex-col items-center text-center">
+              <button
+                type="button"
+                onClick={() => onJump(i)}
+                disabled={!visited}
+                aria-current={active ? "step" : undefined}
+                className={
+                  "relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors " +
+                  (active
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : done
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : visited
+                        ? "border-primary/50 bg-background text-primary"
+                        : "border-border bg-background text-muted-foreground") +
+                  (visited ? " cursor-pointer hover:scale-105" : " cursor-not-allowed")
+                }
+              >
+                {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
+              </button>
+              <div className="mt-2 space-y-0.5">
+                <p
+                  className={
+                    "text-xs font-semibold " +
+                    (active || done ? "text-foreground" : "text-muted-foreground")
+                  }
+                >
+                  {i + 1}. {s.label}
+                </p>
+                <p className="text-[11px] text-muted-foreground">{s.hint}</p>
+                {lastSeen && (
+                  <p className="text-[11px] text-muted-foreground/80">
+                    {active ? "On this step" : `Reached ${fmt(lastSeen.at)}`}
+                  </p>
+                )}
+                {isLastReached && (
+                  <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">
+                    Last reached
+                  </span>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }
 
