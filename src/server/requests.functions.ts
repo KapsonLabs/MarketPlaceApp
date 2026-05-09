@@ -73,6 +73,8 @@ export const submitRequest = createServerFn({ method: "POST" })
       preferredProviderId: data.preferredProviderId,
       audience: data.audience,
       photos: data.photos ?? [],
+      wizardStep: "submitted",
+      stepHistory: [{ step: "submitted", at: now }],
     };
     pushRequest(forwarded);
     return { id, ok: true };
