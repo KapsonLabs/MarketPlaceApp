@@ -197,6 +197,32 @@ function AdminPage() {
                     )}
                   </div>
 
+                  {r.statusHistory && r.statusHistory.length > 0 && (
+                    <div className="rounded-md border border-border bg-background p-3 text-xs">
+                      <p className="font-semibold text-foreground">Status history</p>
+                      <ol className="mt-2 space-y-1 text-muted-foreground">
+                        {r.statusHistory.map((h, i) => (
+                          <li key={i} className="flex justify-between gap-2">
+                            <span className="text-foreground">{h.status}</span>
+                            <span>{new Date(h.at).toLocaleString()}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+
+                  {r.review && (
+                    <div className="rounded-md border border-success/40 bg-success/5 p-3 text-xs">
+                      <p className="font-semibold text-foreground">
+                        Customer review — {r.review.rating}/5
+                      </p>
+                      <p className="mt-1 text-foreground/90">{r.review.comment}</p>
+                      <p className="mt-1 text-muted-foreground">
+                        {r.review.author} • {new Date(r.review.at).toLocaleString()}
+                      </p>
+                    </div>
+                  )}
+
                   {r.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {r.photos.map((p, i) => (

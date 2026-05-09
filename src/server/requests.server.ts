@@ -5,6 +5,7 @@ import type {
   RequestStatus,
   ForwardedMaintenanceRequest,
   PaymentRecord,
+  RequestReview,
 } from "@/lib/request-types";
 
 export type {
@@ -137,6 +138,9 @@ const store: ForwardedMaintenanceRequest[] = [
 ];
 
 export function pushRequest(r: ForwardedMaintenanceRequest) {
+  if (!r.statusHistory || r.statusHistory.length === 0) {
+    r.statusHistory = [{ status: r.status, at: r.createdAt }];
+  }
   store.unshift(r);
   // In production: POST to Unit & Tenant Views endpoint, e.g.
   // await fetch(`${process.env.UTV_API_URL}/maintenance-requests`, { method: "POST", headers: { Authorization: `Bearer ${process.env.UTV_API_KEY}` }, body: JSON.stringify(r) });
@@ -154,9 +158,14 @@ export function updateRequestStatus(
 ): ForwardedMaintenanceRequest | null {
   const r = store.find((x) => x.id === id);
   if (!r) return null;
+  const at = new Date().toISOString();
+  const statusChanged = r.status !== status;
   r.status = status;
   if (notes !== undefined) r.notes = notes;
-  r.updatedAt = new Date().toISOString();
+  r.updatedAt = at;
+  if (statusChanged) {
+    r.statusHistory = [...(r.statusHistory ?? []), { status, at, notes }];
+  }
   return r;
 }
 
@@ -175,4 +184,18 @@ export function getTotalPaidForRequest(requestId: string): number {
   return payments
     .filter((p) => p.requestId === requestId)
     .reduce((sum, p) => sum + p.amount, 0);
+}
+
+export function addReview(requestId: string, review: RequestReview): ForwardedMaintenanceRequest | null {
+  const r = store.find((x) => x.id === requestId);
+  if (!r) return null;
+  r.review = review;
+  r.updatedAt = review.at;
+  return r;
+}
+
+export function listProviderReviews(providerId: string): RequestReview[] {
+  return store
+    .filter((r) => r.review && r.preferredProviderId === providerId)
+    .map((r) => r.review!) as RequestReview[];
 }

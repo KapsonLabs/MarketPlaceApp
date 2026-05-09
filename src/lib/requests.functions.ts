@@ -7,8 +7,10 @@ import {
   mapSpecialtyToCategory,
   addPayment,
   getTotalPaidForRequest,
+  addReview,
+  listProviderReviews,
 } from "../server/requests.server";
-import type { PaymentRecord } from "@/lib/request-types";
+import type { PaymentRecord, RequestReview } from "@/lib/request-types";
 import { REQUEST_STATUSES, REQUEST_WIZARD_STEPS } from "@/lib/request-types";
 import { deriveBillingRecord } from "@/lib/billing";
 import type {
@@ -103,6 +105,7 @@ export const submitRequest = createServerFn({ method: "POST" })
         ...(data.stepHistory ?? []),
         { step: "submitted" as const, at: now },
       ],
+      statusHistory: [{ status: "Open", at: now }],
     };
     pushRequest(forwarded);
     return { id, ok: true };
@@ -168,4 +171,38 @@ export const setRequestStatus = createServerFn({ method: "POST" })
     const r = updateRequestStatus(data.id, data.status, data.notes);
     if (!r) throw new Error("Request not found");
     return { ok: true, request: r };
+  });
+
+const reviewSchema = z.object({
+  requestId: z.string().min(1).max(60),
+  rating: z.number().int().min(1).max(5),
+  comment: z.string().min(3).max(1000),
+  author: z.string().min(1).max(120),
+});
+
+export const submitReview = createServerFn({ method: "POST" })
+  .inputValidator((input) => reviewSchema.parse(input))
+  .handler(async ({ data }) => {
+    const at = new Date().toISOString();
+    const all = listRequests();
+    const target = all.find((r) => r.id === data.requestId);
+    if (!target) throw new Error("Request not found");
+    if (target.status !== "Completed") throw new Error("Only completed jobs can be reviewed");
+    const review: RequestReview = {
+      rating: data.rating,
+      comment: data.comment,
+      at,
+      author: data.author,
+      providerId: target.preferredProviderId,
+    };
+    addReview(data.requestId, review);
+    return { ok: true, review };
+  });
+
+const providerReviewsSchema = z.object({ providerId: z.string().min(1).max(60) });
+
+export const listReviewsForProvider = createServerFn({ method: "GET" })
+  .inputValidator((input) => providerReviewsSchema.parse(input))
+  .handler(async ({ data }) => {
+    return { reviews: listProviderReviews(data.providerId) };
   });

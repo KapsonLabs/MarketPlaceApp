@@ -20,12 +20,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getProvider, providerCover, providerGallery } from "@/data/providers";
+import { listReviewsForProvider } from "@/lib/requests.functions";
+import type { RequestReview } from "@/lib/request-types";
 
 export const Route = createFileRoute("/providers/$providerId")({
-  loader: ({ params }) => {
+  loader: async ({ params }) => {
     const provider = getProvider(params.providerId);
     if (!provider) throw notFound();
-    return { provider };
+    const { reviews: marketplaceReviews } = await listReviewsForProvider({
+      data: { providerId: provider.id },
+    });
+    return { provider, marketplaceReviews };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -50,7 +55,7 @@ export const Route = createFileRoute("/providers/$providerId")({
 });
 
 function ProviderDetail() {
-  const { provider: p } = Route.useLoaderData();
+  const { provider: p, marketplaceReviews } = Route.useLoaderData();
   const cover = providerCover(p);
   const gallery = providerGallery(p);
   const services = p.services ?? ["On-site assessment", "Material sourcing", "Photo job updates"];
@@ -61,7 +66,7 @@ function ProviderDetail() {
   ];
   const serviceAreas = p.serviceAreas ?? [p.city];
   const languages = p.languages ?? ["English"];
-  const reviews = p.profileReviews ?? [
+  const baseReviews = p.profileReviews ?? [
     {
       id: "review-default-1",
       author: "Verified customer",
@@ -73,6 +78,16 @@ function ProviderDetail() {
         "Professional service, clear communication and tidy handover after the job was completed.",
     },
   ];
+  const marketplaceMapped = (marketplaceReviews ?? []).map((r: RequestReview, i: number) => ({
+    id: `mkt-review-${i}`,
+    author: r.author,
+    role: "Marketplace customer",
+    rating: r.rating,
+    date: new Date(r.at).toLocaleDateString(),
+    service: p.specialty,
+    comment: r.comment,
+  }));
+  const reviews = [...marketplaceMapped, ...baseReviews];
 
   return (
     <div className="flex min-h-screen flex-col">
