@@ -51,6 +51,20 @@ export interface RequestStepHistoryEntry {
   at: string;
 }
 
+export interface RequestStatusHistoryEntry {
+  status: RequestStatus;
+  at: string;
+  notes?: string;
+}
+
+export interface RequestReview {
+  rating: number;
+  comment: string;
+  at: string;
+  author: string;
+  providerId?: string;
+}
+
 export interface PaymentRecord {
   id: string;
   requestId: string;
@@ -80,4 +94,6 @@ export interface ForwardedMaintenanceRequest {
   notes?: string;
   wizardStep?: RequestWizardStep;
   stepHistory?: RequestStepHistoryEntry[];
+  statusHistory?: RequestStatusHistoryEntry[];
+  review?: RequestReview;
 }
