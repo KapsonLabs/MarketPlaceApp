@@ -50,7 +50,7 @@ function RequestsPage() {
   const [paidAmounts, setPaidAmounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  function reload() {
     if (!user) return;
     setLoading(true);
     startTransition(() => {
@@ -61,6 +61,11 @@ function RequestsPage() {
         })
         .finally(() => setLoading(false));
     });
+  }
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   return (
