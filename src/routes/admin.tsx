@@ -180,6 +180,23 @@ function AdminPage() {
                     </div>
                   </div>
 
+                  <div className="rounded-md border border-border bg-muted/30 p-3 text-xs">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-foreground">Wizard step:</span>
+                      <Badge variant="outline">{r.wizardStep ?? "submitted"}</Badge>
+                    </div>
+                    {r.stepHistory && r.stepHistory.length > 0 && (
+                      <ol className="mt-2 grid gap-1 text-muted-foreground sm:grid-cols-2">
+                        {r.stepHistory.map((h, i) => (
+                          <li key={i} className="flex justify-between gap-2">
+                            <span className="capitalize text-foreground">{h.step}</span>
+                            <span>{new Date(h.at).toLocaleString()}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
+                  </div>
+
                   {r.photos.length > 0 && (
                     <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                       {r.photos.map((p, i) => (

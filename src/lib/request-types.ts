@@ -37,6 +37,20 @@ export interface RequestLocation {
   address?: string;
 }
 
+export type RequestWizardStep = "job" | "location" | "review" | "submitted";
+
+export const REQUEST_WIZARD_STEPS: RequestWizardStep[] = [
+  "job",
+  "location",
+  "review",
+  "submitted",
+];
+
+export interface RequestStepHistoryEntry {
+  step: RequestWizardStep;
+  at: string;
+}
+
 export interface PaymentRecord {
   id: string;
   requestId: string;
@@ -64,4 +78,6 @@ export interface ForwardedMaintenanceRequest {
   audience: "tenant" | "public";
   photos: RequestPhoto[];
   notes?: string;
+  wizardStep?: RequestWizardStep;
+  stepHistory?: RequestStepHistoryEntry[];
 }

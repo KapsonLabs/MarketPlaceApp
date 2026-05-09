@@ -13,6 +13,7 @@ import {
   Store,
   CheckCircle2,
   Languages,
+  Images,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -221,6 +222,41 @@ function ProviderDetail() {
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
                     {reviews.map((review: typeof reviews[number]) => (
                       <Review key={review.id} review={review} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="mt-6 border-border">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <Images className="h-4 w-4 text-primary" />
+                      <h2 className="text-lg font-semibold text-foreground">Photo gallery</h2>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {gallery.length} photo{gallery.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Recent work and on-site photos from {p.company}.
+                  </p>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {gallery.map((src: string, i: number) => (
+                      <a
+                        key={i}
+                        href={src}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group relative block aspect-[4/3] overflow-hidden rounded-lg border border-border"
+                      >
+                        <img
+                          src={src}
+                          alt={`${p.company} gallery image ${i + 1}`}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </a>
                     ))}
                   </div>
                 </CardContent>

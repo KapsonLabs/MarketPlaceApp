@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import {
   Loader2,
@@ -32,10 +32,13 @@ import { submitRequest } from "@/lib/requests.functions";
 import { useCurrentUser } from "@/lib/current-user";
 import { ClientOnly } from "@tanstack/react-router";
 import { LocationPicker, type PickedLocation } from "@/components/location-picker";
+import type { RequestStepHistoryEntry, RequestWizardStep } from "@/lib/request-types";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 const MAX_PHOTOS = 5;
+const DRAFT_KEY = "casmara.request.draft.v1";
+const STEP_NAMES: RequestWizardStep[] = ["job", "location", "review", "submitted"];
 
 interface UploadedPhoto {
   name: string;
@@ -85,6 +88,10 @@ function RequestPage() {
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [location, setLocation] = useState<PickedLocation | null>(null);
   const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [stepHistory, setStepHistory] = useState<RequestStepHistoryEntry[]>(() => [
+    { step: "job", at: new Date().toISOString() },
+  ]);
+  const [resumed, setResumed] = useState(false);
 
   const [form, setForm] = useState({
     specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
@@ -92,6 +99,55 @@ function RequestPage() {
     description: "",
     priority: "Medium" as "Low" | "Medium" | "High" | "Emergency",
   });
+
+  // Hydrate draft on mount (client-only).
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (hydrated.current) return;
+    hydrated.current = true;
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw) as {
+        form?: typeof form;
+        step?: 0 | 1 | 2;
+        location?: PickedLocation | null;
+        photos?: UploadedPhoto[];
+        stepHistory?: RequestStepHistoryEntry[];
+      };
+      if (d.form) setForm(d.form);
+      if (typeof d.step === "number") setStep(d.step);
+      if (d.location) setLocation(d.location);
+      if (d.photos) setPhotos(d.photos);
+      if (d.stepHistory) setStepHistory(d.stepHistory);
+      setResumed(true);
+    } catch {
+      // ignore corrupt draft
+    }
+  }, []);
+
+  // Auto-save draft on changes.
+  useEffect(() => {
+    if (!hydrated.current || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ form, step, location, photos, stepHistory }),
+      );
+    } catch {
+      // storage may be full or unavailable
+    }
+  }, [form, step, location, photos, stepHistory]);
+
+  function recordStep(next: 0 | 1 | 2) {
+    const stepName = STEP_NAMES[next];
+    setStepHistory((h) =>
+      h.some((e) => e.step === stepName)
+        ? h
+        : [...h, { step: stepName, at: new Date().toISOString() }],
+    );
+  }
 
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -113,7 +169,11 @@ function RequestPage() {
       );
       return;
     }
-    setStep((s) => (s < 2 ? ((s + 1) as 0 | 1 | 2) : s));
+    setStep((s) => {
+      const ns = (s < 2 ? s + 1 : s) as 0 | 1 | 2;
+      recordStep(ns);
+      return ns;
+    });
   }
   function prevStep() {
     setError(null);
@@ -150,8 +210,17 @@ function RequestPage() {
             lng: location.lng,
             accuracy: location.accuracy,
           },
+          wizardStep: "submitted",
+          stepHistory,
         },
       });
+      if (typeof window !== "undefined") {
+        try {
+          window.localStorage.removeItem(DRAFT_KEY);
+        } catch {
+          // ignore
+        }
+      }
       navigate({
         to: "/request/success",
         search: { id: res.id } as never,
@@ -205,6 +274,37 @@ function RequestPage() {
           </p>
 
           <Stepper step={step} />
+
+          {resumed && (
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+              <span className="text-foreground">
+                Resumed your saved draft from this device.
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (typeof window !== "undefined") {
+                    window.localStorage.removeItem(DRAFT_KEY);
+                  }
+                  setResumed(false);
+                  setForm({
+                    specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
+                    title: "",
+                    description: "",
+                    priority: "Medium",
+                  });
+                  setLocation(null);
+                  setPhotos([]);
+                  setStep(0);
+                  setStepHistory([{ step: "job", at: new Date().toISOString() }]);
+                }}
+              >
+                Discard draft
+              </Button>
+            </div>
+          )}
 
           {!user && (
             <Card className="mt-6 border-primary/40 bg-primary/5">
