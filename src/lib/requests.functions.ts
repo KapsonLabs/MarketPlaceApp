@@ -9,9 +9,14 @@ import {
   getTotalPaidForRequest,
 } from "../server/requests.server";
 import type { PaymentRecord } from "@/lib/request-types";
-import { REQUEST_STATUSES } from "@/lib/request-types";
+import { REQUEST_STATUSES, REQUEST_WIZARD_STEPS } from "@/lib/request-types";
 import { deriveBillingRecord } from "@/lib/billing";
-import type { ForwardedMaintenanceRequest, RequestStatus } from "@/lib/request-types";
+import type {
+  ForwardedMaintenanceRequest,
+  RequestStatus,
+  RequestWizardStep,
+  RequestStepHistoryEntry,
+} from "@/lib/request-types";
 import type { BillingRecord } from "@/lib/billing";
 import type { Specialty } from "@/data/providers";
 
@@ -56,6 +61,18 @@ const schema = z.object({
     accuracy: z.number().min(0).max(100000).optional(),
     address: z.string().max(300).optional(),
   }),
+  wizardStep: z
+    .enum(REQUEST_WIZARD_STEPS as [RequestWizardStep, ...RequestWizardStep[]])
+    .optional(),
+  stepHistory: z
+    .array(
+      z.object({
+        step: z.enum(REQUEST_WIZARD_STEPS as [RequestWizardStep, ...RequestWizardStep[]]),
+        at: z.string().min(1).max(40),
+      }),
+    )
+    .max(20)
+    .optional(),
 });
 
 export const submitRequest = createServerFn({ method: "POST" })
@@ -81,6 +98,11 @@ export const submitRequest = createServerFn({ method: "POST" })
       preferredProviderId: data.preferredProviderId,
       audience: data.audience,
       photos: data.photos ?? [],
+      wizardStep: "submitted",
+      stepHistory: [
+        ...(data.stepHistory ?? []),
+        { step: "submitted" as const, at: now },
+      ],
     };
     pushRequest(forwarded);
     return { id, ok: true };
