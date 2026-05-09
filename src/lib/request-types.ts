@@ -78,6 +78,6 @@ export interface ForwardedMaintenanceRequest {
   audience: "tenant" | "public";
   photos: RequestPhoto[];
   notes?: string;
-  wizardStep: RequestWizardStep;
-  stepHistory: RequestStepHistoryEntry[];
+  wizardStep?: RequestWizardStep;
+  stepHistory?: RequestStepHistoryEntry[];
 }
