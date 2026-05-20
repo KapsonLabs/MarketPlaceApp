@@ -17,8 +17,13 @@ export interface BillingRecord {
   total: number;
   paidAmount: number;
   balance: number;
+  assessmentFee: number;
+  workTotal: number;
   lineItems: BillingLineItem[];
 }
+
+/** Flat, non-refundable assessment fee charged upfront on every request. */
+export const ASSESSMENT_FEE = 35000;
 
 const BASE_CATEGORY_PRICING: Record<ForwardedMaintenanceRequest["category"], number> = {
   Plumbing: 90000,
@@ -42,8 +47,6 @@ export function deriveBillingStatus(
   total: number,
 ): BillingStatus {
   if (requestStatus === "Cancelled") return "Cancelled";
-  if (requestStatus === "Open" || requestStatus === "Triaged") return "Estimate";
-  // Job is assigned or further — payment is now expected
   if (paidAmount >= total) return "Paid";
   if (paidAmount > 0) return "PartiallyPaid";
   return "Pending";
@@ -56,10 +59,27 @@ export function deriveBillingRecord(
   const serviceVisit = BASE_CATEGORY_PRICING[request.category];
   const priorityFee = PRIORITY_SURCHARGE[request.priority];
   const marketplaceFee = Math.round(serviceVisit * 0.08);
-  const materialsAllowance = request.preferredProviderId ? 30000 : 18000;
-  const total = serviceVisit + priorityFee + marketplaceFee + materialsAllowance;
+  const assessmentFee = ASSESSMENT_FEE;
+  // Work invoice is only firmed up once the assessor has visited (status >= Assigned).
+  const assessmentComplete =
+    request.status === "Assigned" ||
+    request.status === "InProgress" ||
+    request.status === "Completed";
+  const workTotal = assessmentComplete ? serviceVisit + priorityFee + marketplaceFee : 0;
+  const total = assessmentFee + workTotal;
   const clamped = Math.min(paidAmount, total);
   const status = deriveBillingStatus(request.status, clamped, total);
+
+  const lineItems: BillingLineItem[] = [
+    { label: "Assessment fee (non-refundable)", amount: assessmentFee },
+  ];
+  if (assessmentComplete) {
+    lineItems.push(
+      { label: `${request.category} service visit`, amount: serviceVisit },
+      { label: `${request.priority} priority handling`, amount: priorityFee },
+      { label: "Marketplace coordination fee", amount: marketplaceFee },
+    );
+  }
 
   return {
     id: `inv-${request.id}`,
@@ -71,12 +91,9 @@ export function deriveBillingRecord(
     total,
     paidAmount: clamped,
     balance: total - clamped,
-    lineItems: [
-      { label: `${request.category} service visit`, amount: serviceVisit },
-      { label: `${request.priority} priority handling`, amount: priorityFee },
-      { label: "Marketplace coordination fee", amount: marketplaceFee },
-      { label: "Materials allowance", amount: materialsAllowance },
-    ].filter((item) => item.amount > 0),
+    assessmentFee,
+    workTotal,
+    lineItems: lineItems.filter((item) => item.amount > 0),
   };
 }
 
@@ -87,3 +104,22 @@ export const REQUEST_PROGRESS_STEPS: RequestStatus[] = [
   "InProgress",
   "Completed",
 ];
+
+/** Human labels for each lifecycle stage in the new workflow. */
+export const REQUEST_STATUS_LABEL: Record<RequestStatus, string> = {
+  Open: "Assessment requested",
+  Triaged: "Assessor dispatched",
+  Assigned: "Provider assigned",
+  InProgress: "Work in progress",
+  Completed: "Completed",
+  Cancelled: "Cancelled",
+};
+
+export const REQUEST_STATUS_HINT: Record<RequestStatus, string> = {
+  Open: "Pay assessment fee to dispatch an assessor.",
+  Triaged: "Assessor is scoping the job. Work invoice coming next.",
+  Assigned: "Invoice issued. Service provider assigned to the job.",
+  InProgress: "Provider is on-site delivering the work.",
+  Completed: "Job complete — pay the remaining balance to close.",
+  Cancelled: "This job was cancelled.",
+};
