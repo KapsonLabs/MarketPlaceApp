@@ -456,6 +456,18 @@ function RequestPage() {
                     onChange={(e) => update("description", e.target.value)}
                   />
                 </Field>
+                <Field
+                  label="Schedule assessment (optional)"
+                  id="scheduledFor"
+                  hint="Leave empty to have an assessor dispatched as soon as possible."
+                >
+                  <Input
+                    id="scheduledFor"
+                    type="datetime-local"
+                    value={form.scheduledFor}
+                    onChange={(e) => update("scheduledFor", e.target.value)}
+                  />
+                </Field>
               </CardContent>
             </Card>
             )}
