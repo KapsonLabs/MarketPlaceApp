@@ -7,7 +7,7 @@ import {
   Shield,
   Sparkles,
   Star,
-  Store,
+  ClipboardCheck,
   Zap,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
@@ -95,9 +95,6 @@ function Landing() {
                 </Button>
                 <Button asChild size="lg" variant="outline">
                   <Link to="/providers">Browse providers</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link to="/materials">Materials market</Link>
                 </Button>
               </div>
               <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4">
@@ -211,9 +208,9 @@ function Landing() {
                 body: "Most jobs accepted within 30 minutes during business hours.",
               },
               {
-                icon: Store,
-                title: "Materials market",
-                body: "Source approved repair materials and ask a provider to install them.",
+                icon: ClipboardCheck,
+                title: "Independent assessment",
+                body: "A vetted assessor visits first, scopes the job and issues a transparent invoice before any provider is dispatched.",
               },
             ].map((b) => (
               <div key={b.title} className="flex gap-4">
