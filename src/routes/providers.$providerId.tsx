@@ -10,7 +10,6 @@ import {
   BriefcaseBusiness,
   MessageSquareText,
   ShieldCheck,
-  Store,
   CheckCircle2,
   Languages,
   Images,
@@ -297,11 +296,6 @@ function ProviderDetail() {
                   <p className="mt-3 text-center text-xs text-muted-foreground">
                     No charge until the pro accepts your request.
                   </p>
-                  <Button asChild size="lg" variant="outline" className="mt-3 w-full">
-                    <Link to="/materials">
-                      <Store className="mr-1 h-4 w-4" /> Shop materials
-                    </Link>
-                  </Button>
                 </CardContent>
               </Card>
             </aside>
