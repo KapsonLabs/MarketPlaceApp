@@ -306,6 +306,7 @@ function RequestPage() {
                     title: "",
                     description: "",
                     priority: "Medium",
+                    scheduledFor: "",
                   });
                   setLocation(null);
                   setPhotos([]);
