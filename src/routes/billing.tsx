@@ -56,9 +56,12 @@ function BillingPage() {
   }, [user]);
 
   async function handlePay(invoice: BillingRecord) {
-    const isDeposit = invoice.status === "Pending";
-    const amount = isDeposit ? Math.round(invoice.total * 0.4) : invoice.balance;
-    const type = isDeposit ? "deposit" : "final";
+    // First payment always covers the non-refundable assessment fee.
+    // After that, the remaining balance is the work invoice.
+    const assessmentDue = Math.max(invoice.assessmentFee - invoice.paidAmount, 0);
+    const isAssessmentPayment = assessmentDue > 0;
+    const amount = isAssessmentPayment ? assessmentDue : invoice.balance;
+    const type = isAssessmentPayment ? "deposit" : "final";
     setPaying(invoice.id);
     try {
       await recordPayment({ data: { requestId: invoice.requestId, amount, type } });
@@ -171,8 +174,8 @@ function BillingPage() {
                         <div className="mt-5 flex items-center justify-between gap-4 rounded-lg border border-primary/30 bg-primary/5 px-5 py-4">
                           <div>
                             <p className="text-sm font-medium text-foreground">
-                              {invoice.status === "Pending"
-                                ? "Pay deposit to confirm job start"
+                              {invoice.paidAmount < invoice.assessmentFee
+                                ? "Pay assessment fee to dispatch an assessor"
                                 : "Pay remaining balance to close job"}
                             </p>
                             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -189,8 +192,8 @@ function BillingPage() {
                                 <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" />
                                 Processing…
                               </>
-                            ) : invoice.status === "Pending" ? (
-                              "Pay deposit"
+                            ) : invoice.paidAmount < invoice.assessmentFee ? (
+                              "Pay assessment fee"
                             ) : (
                               "Pay in full"
                             )}
