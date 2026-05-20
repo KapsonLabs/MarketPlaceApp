@@ -63,6 +63,7 @@ const schema = z.object({
     accuracy: z.number().min(0).max(100000).optional(),
     address: z.string().max(300).optional(),
   }),
+  scheduledFor: z.string().min(1).max(40).optional(),
   wizardStep: z
     .enum(REQUEST_WIZARD_STEPS as [RequestWizardStep, ...RequestWizardStep[]])
     .optional(),
@@ -100,6 +101,7 @@ export const submitRequest = createServerFn({ method: "POST" })
       preferredProviderId: data.preferredProviderId,
       audience: data.audience,
       photos: data.photos ?? [],
+      scheduledFor: data.scheduledFor,
       wizardStep: "submitted",
       stepHistory: [
         ...(data.stepHistory ?? []),
