@@ -33,6 +33,7 @@ import { useCurrentUser } from "@/lib/current-user";
 import { ClientOnly } from "@tanstack/react-router";
 import { LocationPicker, type PickedLocation } from "@/components/location-picker";
 import type { RequestStepHistoryEntry, RequestWizardStep } from "@/lib/request-types";
+import { ASSESSMENT_FEE } from "@/lib/billing";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -98,6 +99,7 @@ function RequestPage() {
     title: "",
     description: "",
     priority: "Medium" as "Low" | "Medium" | "High" | "Emergency",
+    scheduledFor: "" as string,
   });
 
   // Hydrate draft on mount (client-only).
@@ -210,6 +212,9 @@ function RequestPage() {
             lng: location.lng,
             accuracy: location.accuracy,
           },
+          scheduledFor: form.scheduledFor
+            ? new Date(form.scheduledFor).toISOString()
+            : undefined,
           wizardStep: "submitted",
           stepHistory,
         },
