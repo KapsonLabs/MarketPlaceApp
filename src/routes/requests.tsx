@@ -15,7 +15,12 @@ import {
 import { SiteFooter, SiteHeader } from "@/components/site-header";
 import { useCurrentUser } from "@/lib/current-user";
 import { listUserRequests, submitReview } from "@/lib/requests.functions";
-import { REQUEST_PROGRESS_STEPS, deriveBillingRecord } from "@/lib/billing";
+import {
+  REQUEST_PROGRESS_STEPS,
+  REQUEST_STATUS_LABEL,
+  REQUEST_STATUS_HINT,
+  deriveBillingRecord,
+} from "@/lib/billing";
 import type { ForwardedMaintenanceRequest, RequestStatus } from "@/lib/request-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -133,13 +138,22 @@ function RequestsPage() {
                                 {request.title}
                               </h2>
                               <Badge variant="outline" className={statusTone[request.status]}>
-                                {request.status}
+                                {REQUEST_STATUS_LABEL[request.status]}
                               </Badge>
                               <Badge variant="secondary">{request.priority}</Badge>
                             </div>
                             <p className="mt-2 text-sm text-muted-foreground">
                               {request.description}
                             </p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              {REQUEST_STATUS_HINT[request.status]}
+                            </p>
+                            {request.scheduledFor && (
+                              <p className="mt-1 text-xs text-primary">
+                                Assessment scheduled for{" "}
+                                {new Date(request.scheduledFor).toLocaleString()}
+                              </p>
+                            )}
                             <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
                               <span className="inline-flex items-center gap-1">
                                 <Clock3 className="h-3.5 w-3.5" />
@@ -203,7 +217,9 @@ function RequestsPage() {
                                     >
                                       {index + 1}
                                     </span>
-                                    <span>{step}</span>
+                                    <span className="leading-tight">
+                                      {REQUEST_STATUS_LABEL[step]}
+                                    </span>
                                   </div>
                                 </div>
                               );
