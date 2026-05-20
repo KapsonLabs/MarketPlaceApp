@@ -33,13 +33,6 @@ export function SiteHeader() {
             Browse providers
           </Link>
           <Link
-            to="/materials"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            activeProps={{ className: "text-sm font-medium text-foreground" }}
-          >
-            Materials
-          </Link>
-          <Link
             to="/requests"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             activeProps={{ className: "text-sm font-medium text-foreground" }}
@@ -110,9 +103,6 @@ export function SiteFooter() {
           </Link>
           <Link to="/for-providers" className="hover:text-foreground">
             For providers
-          </Link>
-          <Link to="/materials" className="hover:text-foreground">
-            Materials
           </Link>
           <Link to="/requests" className="hover:text-foreground">
             My requests

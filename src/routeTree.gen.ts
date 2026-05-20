@@ -13,7 +13,6 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RequestRouteImport } from './routes/request'
 import { Route as ProvidersRouteImport } from './routes/providers'
-import { Route as MaterialsRouteImport } from './routes/materials'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForProvidersRouteImport } from './routes/for-providers'
 import { Route as BillingRouteImport } from './routes/billing'
@@ -40,11 +39,6 @@ const RequestRoute = RequestRouteImport.update({
 const ProvidersRoute = ProvidersRouteImport.update({
   id: '/providers',
   path: '/providers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MaterialsRoute = MaterialsRouteImport.update({
-  id: '/materials',
-  path: '/materials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HowItWorksRoute = HowItWorksRouteImport.update({
@@ -89,7 +83,6 @@ export interface FileRoutesByFullPath {
   '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/materials': typeof MaterialsRoute
   '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
@@ -103,7 +96,6 @@ export interface FileRoutesByTo {
   '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/materials': typeof MaterialsRoute
   '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
@@ -118,7 +110,6 @@ export interface FileRoutesById {
   '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
-  '/materials': typeof MaterialsRoute
   '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
@@ -134,7 +125,6 @@ export interface FileRouteTypes {
     | '/billing'
     | '/for-providers'
     | '/how-it-works'
-    | '/materials'
     | '/providers'
     | '/request'
     | '/requests'
@@ -148,7 +138,6 @@ export interface FileRouteTypes {
     | '/billing'
     | '/for-providers'
     | '/how-it-works'
-    | '/materials'
     | '/providers'
     | '/request'
     | '/requests'
@@ -162,7 +151,6 @@ export interface FileRouteTypes {
     | '/billing'
     | '/for-providers'
     | '/how-it-works'
-    | '/materials'
     | '/providers'
     | '/request'
     | '/requests'
@@ -177,7 +165,6 @@ export interface RootRouteChildren {
   BillingRoute: typeof BillingRoute
   ForProvidersRoute: typeof ForProvidersRoute
   HowItWorksRoute: typeof HowItWorksRoute
-  MaterialsRoute: typeof MaterialsRoute
   ProvidersRoute: typeof ProvidersRouteWithChildren
   RequestRoute: typeof RequestRouteWithChildren
   RequestsRoute: typeof RequestsRoute
@@ -212,13 +199,6 @@ declare module '@tanstack/react-router' {
       path: '/providers'
       fullPath: '/providers'
       preLoaderRoute: typeof ProvidersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/materials': {
-      id: '/materials'
-      path: '/materials'
-      fullPath: '/materials'
-      preLoaderRoute: typeof MaterialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/how-it-works': {
@@ -302,7 +282,6 @@ const rootRouteChildren: RootRouteChildren = {
   BillingRoute: BillingRoute,
   ForProvidersRoute: ForProvidersRoute,
   HowItWorksRoute: HowItWorksRoute,
-  MaterialsRoute: MaterialsRoute,
   ProvidersRoute: ProvidersRouteWithChildren,
   RequestRoute: RequestRouteWithChildren,
   RequestsRoute: RequestsRoute,

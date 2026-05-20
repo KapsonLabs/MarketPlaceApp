@@ -33,6 +33,7 @@ import { useCurrentUser } from "@/lib/current-user";
 import { ClientOnly } from "@tanstack/react-router";
 import { LocationPicker, type PickedLocation } from "@/components/location-picker";
 import type { RequestStepHistoryEntry, RequestWizardStep } from "@/lib/request-types";
+import { ASSESSMENT_FEE } from "@/lib/billing";
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -98,6 +99,7 @@ function RequestPage() {
     title: "",
     description: "",
     priority: "Medium" as "Low" | "Medium" | "High" | "Emergency",
+    scheduledFor: "" as string,
   });
 
   // Hydrate draft on mount (client-only).
@@ -210,6 +212,9 @@ function RequestPage() {
             lng: location.lng,
             accuracy: location.accuracy,
           },
+          scheduledFor: form.scheduledFor
+            ? new Date(form.scheduledFor).toISOString()
+            : undefined,
           wizardStep: "submitted",
           stepHistory,
         },
@@ -301,6 +306,7 @@ function RequestPage() {
                     title: "",
                     description: "",
                     priority: "Medium",
+                    scheduledFor: "",
                   });
                   setLocation(null);
                   setPhotos([]);
@@ -450,6 +456,18 @@ function RequestPage() {
                     onChange={(e) => update("description", e.target.value)}
                   />
                 </Field>
+                <Field
+                  label="Schedule assessment (optional)"
+                  id="scheduledFor"
+                  hint="Leave empty to have an assessor dispatched as soon as possible."
+                >
+                  <Input
+                    id="scheduledFor"
+                    type="datetime-local"
+                    value={form.scheduledFor}
+                    onChange={(e) => update("scheduledFor", e.target.value)}
+                  />
+                </Field>
               </CardContent>
             </Card>
             )}
@@ -545,6 +563,14 @@ function RequestPage() {
                       value={preferred ? preferred.company : "Auto-match"}
                     />
                     <ReviewRow
+                      label="Assessment"
+                      value={
+                        form.scheduledFor
+                          ? `Scheduled for ${new Date(form.scheduledFor).toLocaleString()}`
+                          : "Dispatch as soon as possible"
+                      }
+                    />
+                    <ReviewRow
                       label="Location"
                       value={
                         location
@@ -555,6 +581,29 @@ function RequestPage() {
                     />
                     <ReviewRow label="Description" value={form.description || "—"} full />
                   </dl>
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
+                    <p className="font-semibold text-foreground">
+                      How billing works
+                    </p>
+                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                      <li>
+                        A non-refundable assessment fee of{" "}
+                        <span className="font-medium text-foreground">
+                          USh {ASSESSMENT_FEE.toLocaleString()}
+                        </span>{" "}
+                        is charged on submit. An assessor is then dispatched.
+                      </li>
+                      <li>
+                        After the visit, a detailed work invoice is issued for your approval.
+                      </li>
+                      <li>
+                        A vetted service provider is assigned and the job is tracked end-to-end.
+                      </li>
+                      <li>
+                        You pay the remaining balance only once the work is completed.
+                      </li>
+                    </ol>
+                  </div>
                   {photos.length > 0 && (
                     <div>
                       <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
