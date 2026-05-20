@@ -350,7 +350,9 @@ function OrderHistory({ request }: { request: ForwardedMaintenanceRequest }) {
             />
             <div className="flex-1">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <span className="font-medium text-foreground">{entry.status}</span>
+                <span className="font-medium text-foreground">
+                  {REQUEST_STATUS_LABEL[entry.status]}
+                </span>
                 <span className="text-xs text-muted-foreground">
                   {new Date(entry.at).toLocaleString()}
                 </span>
