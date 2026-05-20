@@ -563,6 +563,14 @@ function RequestPage() {
                       value={preferred ? preferred.company : "Auto-match"}
                     />
                     <ReviewRow
+                      label="Assessment"
+                      value={
+                        form.scheduledFor
+                          ? `Scheduled for ${new Date(form.scheduledFor).toLocaleString()}`
+                          : "Dispatch as soon as possible"
+                      }
+                    />
+                    <ReviewRow
                       label="Location"
                       value={
                         location
@@ -573,6 +581,29 @@ function RequestPage() {
                     />
                     <ReviewRow label="Description" value={form.description || "—"} full />
                   </dl>
+                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
+                    <p className="font-semibold text-foreground">
+                      How billing works
+                    </p>
+                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                      <li>
+                        A non-refundable assessment fee of{" "}
+                        <span className="font-medium text-foreground">
+                          USh {ASSESSMENT_FEE.toLocaleString()}
+                        </span>{" "}
+                        is charged on submit. An assessor is then dispatched.
+                      </li>
+                      <li>
+                        After the visit, a detailed work invoice is issued for your approval.
+                      </li>
+                      <li>
+                        A vetted service provider is assigned and the job is tracked end-to-end.
+                      </li>
+                      <li>
+                        You pay the remaining balance only once the work is completed.
+                      </li>
+                    </ol>
+                  </div>
                   {photos.length > 0 && (
                     <div>
                       <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
