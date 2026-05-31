@@ -63,7 +63,21 @@ const schema = z.object({
     accuracy: z.number().min(0).max(100000).optional(),
     address: z.string().max(300).optional(),
   }),
-  scheduledFor: z.string().min(1).max(40).optional(),
+  scheduledFor: z
+    .string()
+    .min(1)
+    .max(40)
+    .optional()
+    .refine(
+      (v) => {
+        if (!v) return true;
+        const t = Date.parse(v);
+        if (Number.isNaN(t)) return false;
+        // Allow a small 1-minute clock skew tolerance
+        return t >= Date.now() - 60_000;
+      },
+      { message: "Scheduled date must be in the future" },
+    ),
   wizardStep: z
     .enum(REQUEST_WIZARD_STEPS as [RequestWizardStep, ...RequestWizardStep[]])
     .optional(),
