@@ -94,6 +94,15 @@ function RequestPage() {
   ]);
   const [resumed, setResumed] = useState(false);
 
+  // Min value for the datetime-local input (now, rounded to the minute, in local time).
+  function localNowForInput(): string {
+    const d = new Date();
+    d.setSeconds(0, 0);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  const minScheduledFor = localNowForInput();
+
   const [form, setForm] = useState({
     specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
     title: "",
@@ -154,9 +163,18 @@ function RequestPage() {
   const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  const scheduledInPast = (() => {
+    if (!form.scheduledFor) return false;
+    const t = Date.parse(form.scheduledFor);
+    if (Number.isNaN(t)) return true;
+    return t < Date.now() - 60_000;
+  })();
+
   const stepValid =
     step === 0
-      ? form.title.trim().length >= 3 && form.description.trim().length >= 10
+      ? form.title.trim().length >= 3 &&
+        form.description.trim().length >= 10 &&
+        !scheduledInPast
       : step === 1
         ? !!location
         : true;
@@ -166,7 +184,9 @@ function RequestPage() {
     if (!stepValid) {
       setError(
         step === 0
-          ? "Add a short title and a description (10+ characters)."
+          ? scheduledInPast
+            ? "Scheduled date can't be in the past. Pick a future date and time."
+            : "Add a short title and a description (10+ characters)."
           : "Share your location or drop a pin to continue.",
       );
       return;
@@ -191,6 +211,11 @@ function RequestPage() {
     }
     if (!location) {
       setError("Please share your location or drop a pin on the map.");
+      return;
+    }
+    if (scheduledInPast) {
+      setError("Scheduled date can't be in the past. Pick a future date and time.");
+      setStep(0);
       return;
     }
     setSubmitting(true);
@@ -464,9 +489,15 @@ function RequestPage() {
                   <Input
                     id="scheduledFor"
                     type="datetime-local"
+                    min={minScheduledFor}
                     value={form.scheduledFor}
                     onChange={(e) => update("scheduledFor", e.target.value)}
                   />
+                  {scheduledInPast && (
+                    <p className="mt-1 text-xs text-destructive">
+                      Scheduled date can't be in the past.
+                    </p>
+                  )}
                 </Field>
               </CardContent>
             </Card>
