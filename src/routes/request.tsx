@@ -489,9 +489,15 @@ function RequestPage() {
                   <Input
                     id="scheduledFor"
                     type="datetime-local"
+                    min={minScheduledFor}
                     value={form.scheduledFor}
                     onChange={(e) => update("scheduledFor", e.target.value)}
                   />
+                  {scheduledInPast && (
+                    <p className="mt-1 text-xs text-destructive">
+                      Scheduled date can't be in the past.
+                    </p>
+                  )}
                 </Field>
               </CardContent>
             </Card>
