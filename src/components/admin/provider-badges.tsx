@@ -39,8 +39,17 @@ const tone: Record<string, string> = {
   none: "bg-muted text-muted-foreground border-border",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  awaiting_assignment: "Assigning",
+};
+
 function prettify(value: string) {
+  if (STATUS_LABELS[value]) return STATUS_LABELS[value];
   return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function formatStatusLabel(value: string): string {
+  return prettify(value);
 }
 
 export function StatusBadge({

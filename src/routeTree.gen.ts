@@ -16,7 +16,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as MarketplaceSignInRouteImport } from './routes/marketplace/sign-in'
-import { Route as MarketplaceRequestsRouteImport } from './routes/marketplace/requests'
 import { Route as MarketplaceRequestPhotosRouteImport } from './routes/marketplace/request-photos'
 import { Route as MarketplaceRequestRouteImport } from './routes/marketplace/request'
 import { Route as MarketplaceProvidersRouteImport } from './routes/marketplace/providers'
@@ -24,10 +23,12 @@ import { Route as MarketplaceHowItWorksRouteImport } from './routes/marketplace/
 import { Route as MarketplaceForProvidersRouteImport } from './routes/marketplace/for-providers'
 import { Route as MarketplaceBillingRouteImport } from './routes/marketplace/billing'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as MarketplaceRequestsIndexRouteImport } from './routes/marketplace/requests.index'
 import { Route as AdminTasksIndexRouteImport } from './routes/admin/tasks.index'
 import { Route as AdminRequestsIndexRouteImport } from './routes/admin/requests.index'
 import { Route as AdminProvidersIndexRouteImport } from './routes/admin/providers.index'
 import { Route as AdminPaymentsIndexRouteImport } from './routes/admin/payments.index'
+import { Route as MarketplaceRequestsRequestIdRouteImport } from './routes/marketplace/requests.$requestId'
 import { Route as MarketplaceProvidersProviderIdRouteImport } from './routes/marketplace/providers.$providerId'
 import { Route as AdminTasksTaskIdRouteImport } from './routes/admin/tasks.$taskId'
 import { Route as AdminRequestsRequestIdRouteImport } from './routes/admin/requests.$requestId'
@@ -69,11 +70,6 @@ const MarketplaceSignInRoute = MarketplaceSignInRouteImport.update({
   path: '/sign-in',
   getParentRoute: () => MarketplaceRoute,
 } as any)
-const MarketplaceRequestsRoute = MarketplaceRequestsRouteImport.update({
-  id: '/requests',
-  path: '/requests',
-  getParentRoute: () => MarketplaceRoute,
-} as any)
 const MarketplaceRequestPhotosRoute =
   MarketplaceRequestPhotosRouteImport.update({
     id: '/request-photos',
@@ -110,6 +106,12 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRoute,
 } as any)
+const MarketplaceRequestsIndexRoute =
+  MarketplaceRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => MarketplaceRoute,
+  } as any)
 const AdminTasksIndexRoute = AdminTasksIndexRouteImport.update({
   id: '/tasks/',
   path: '/tasks/',
@@ -130,6 +132,12 @@ const AdminPaymentsIndexRoute = AdminPaymentsIndexRouteImport.update({
   path: '/payments/',
   getParentRoute: () => AdminRoute,
 } as any)
+const MarketplaceRequestsRequestIdRoute =
+  MarketplaceRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => MarketplaceRoute,
+  } as any)
 const MarketplaceProvidersProviderIdRoute =
   MarketplaceProvidersProviderIdRouteImport.update({
     id: '/$providerId',
@@ -170,7 +178,6 @@ export interface FileRoutesByFullPath {
   '/marketplace/providers': typeof MarketplaceProvidersRouteWithChildren
   '/marketplace/request': typeof MarketplaceRequestRoute
   '/marketplace/request-photos': typeof MarketplaceRequestPhotosRoute
-  '/marketplace/requests': typeof MarketplaceRequestsRoute
   '/marketplace/sign-in': typeof MarketplaceSignInRoute
   '/admin/': typeof AdminIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
@@ -179,10 +186,12 @@ export interface FileRoutesByFullPath {
   '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
   '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
   '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
+  '/marketplace/requests/$requestId': typeof MarketplaceRequestsRequestIdRoute
   '/admin/payments/': typeof AdminPaymentsIndexRoute
   '/admin/providers/': typeof AdminProvidersIndexRoute
   '/admin/requests/': typeof AdminRequestsIndexRoute
   '/admin/tasks/': typeof AdminTasksIndexRoute
+  '/marketplace/requests/': typeof MarketplaceRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -194,7 +203,6 @@ export interface FileRoutesByTo {
   '/marketplace/providers': typeof MarketplaceProvidersRouteWithChildren
   '/marketplace/request': typeof MarketplaceRequestRoute
   '/marketplace/request-photos': typeof MarketplaceRequestPhotosRoute
-  '/marketplace/requests': typeof MarketplaceRequestsRoute
   '/marketplace/sign-in': typeof MarketplaceSignInRoute
   '/admin': typeof AdminIndexRoute
   '/marketplace': typeof MarketplaceIndexRoute
@@ -203,10 +211,12 @@ export interface FileRoutesByTo {
   '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
   '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
   '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
+  '/marketplace/requests/$requestId': typeof MarketplaceRequestsRequestIdRoute
   '/admin/payments': typeof AdminPaymentsIndexRoute
   '/admin/providers': typeof AdminProvidersIndexRoute
   '/admin/requests': typeof AdminRequestsIndexRoute
   '/admin/tasks': typeof AdminTasksIndexRoute
+  '/marketplace/requests': typeof MarketplaceRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -221,7 +231,6 @@ export interface FileRoutesById {
   '/marketplace/providers': typeof MarketplaceProvidersRouteWithChildren
   '/marketplace/request': typeof MarketplaceRequestRoute
   '/marketplace/request-photos': typeof MarketplaceRequestPhotosRoute
-  '/marketplace/requests': typeof MarketplaceRequestsRoute
   '/marketplace/sign-in': typeof MarketplaceSignInRoute
   '/admin/': typeof AdminIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
@@ -230,10 +239,12 @@ export interface FileRoutesById {
   '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
   '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
   '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
+  '/marketplace/requests/$requestId': typeof MarketplaceRequestsRequestIdRoute
   '/admin/payments/': typeof AdminPaymentsIndexRoute
   '/admin/providers/': typeof AdminProvidersIndexRoute
   '/admin/requests/': typeof AdminRequestsIndexRoute
   '/admin/tasks/': typeof AdminTasksIndexRoute
+  '/marketplace/requests/': typeof MarketplaceRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -249,7 +260,6 @@ export interface FileRouteTypes {
     | '/marketplace/providers'
     | '/marketplace/request'
     | '/marketplace/request-photos'
-    | '/marketplace/requests'
     | '/marketplace/sign-in'
     | '/admin/'
     | '/marketplace/'
@@ -258,10 +268,12 @@ export interface FileRouteTypes {
     | '/admin/requests/$requestId'
     | '/admin/tasks/$taskId'
     | '/marketplace/providers/$providerId'
+    | '/marketplace/requests/$requestId'
     | '/admin/payments/'
     | '/admin/providers/'
     | '/admin/requests/'
     | '/admin/tasks/'
+    | '/marketplace/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -273,7 +285,6 @@ export interface FileRouteTypes {
     | '/marketplace/providers'
     | '/marketplace/request'
     | '/marketplace/request-photos'
-    | '/marketplace/requests'
     | '/marketplace/sign-in'
     | '/admin'
     | '/marketplace'
@@ -282,10 +293,12 @@ export interface FileRouteTypes {
     | '/admin/requests/$requestId'
     | '/admin/tasks/$taskId'
     | '/marketplace/providers/$providerId'
+    | '/marketplace/requests/$requestId'
     | '/admin/payments'
     | '/admin/providers'
     | '/admin/requests'
     | '/admin/tasks'
+    | '/marketplace/requests'
   id:
     | '__root__'
     | '/'
@@ -299,7 +312,6 @@ export interface FileRouteTypes {
     | '/marketplace/providers'
     | '/marketplace/request'
     | '/marketplace/request-photos'
-    | '/marketplace/requests'
     | '/marketplace/sign-in'
     | '/admin/'
     | '/marketplace/'
@@ -308,10 +320,12 @@ export interface FileRouteTypes {
     | '/admin/requests/$requestId'
     | '/admin/tasks/$taskId'
     | '/marketplace/providers/$providerId'
+    | '/marketplace/requests/$requestId'
     | '/admin/payments/'
     | '/admin/providers/'
     | '/admin/requests/'
     | '/admin/tasks/'
+    | '/marketplace/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -372,13 +386,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceSignInRouteImport
       parentRoute: typeof MarketplaceRoute
     }
-    '/marketplace/requests': {
-      id: '/marketplace/requests'
-      path: '/requests'
-      fullPath: '/marketplace/requests'
-      preLoaderRoute: typeof MarketplaceRequestsRouteImport
-      parentRoute: typeof MarketplaceRoute
-    }
     '/marketplace/request-photos': {
       id: '/marketplace/request-photos'
       path: '/request-photos'
@@ -428,6 +435,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/marketplace/requests/': {
+      id: '/marketplace/requests/'
+      path: '/requests'
+      fullPath: '/marketplace/requests/'
+      preLoaderRoute: typeof MarketplaceRequestsIndexRouteImport
+      parentRoute: typeof MarketplaceRoute
+    }
     '/admin/tasks/': {
       id: '/admin/tasks/'
       path: '/tasks'
@@ -455,6 +469,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/payments/'
       preLoaderRoute: typeof AdminPaymentsIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/marketplace/requests/$requestId': {
+      id: '/marketplace/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/marketplace/requests/$requestId'
+      preLoaderRoute: typeof MarketplaceRequestsRequestIdRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
     '/marketplace/providers/$providerId': {
       id: '/marketplace/providers/$providerId'
@@ -540,9 +561,10 @@ interface MarketplaceRouteChildren {
   MarketplaceProvidersRoute: typeof MarketplaceProvidersRouteWithChildren
   MarketplaceRequestRoute: typeof MarketplaceRequestRoute
   MarketplaceRequestPhotosRoute: typeof MarketplaceRequestPhotosRoute
-  MarketplaceRequestsRoute: typeof MarketplaceRequestsRoute
   MarketplaceSignInRoute: typeof MarketplaceSignInRoute
   MarketplaceIndexRoute: typeof MarketplaceIndexRoute
+  MarketplaceRequestsRequestIdRoute: typeof MarketplaceRequestsRequestIdRoute
+  MarketplaceRequestsIndexRoute: typeof MarketplaceRequestsIndexRoute
 }
 
 const MarketplaceRouteChildren: MarketplaceRouteChildren = {
@@ -552,9 +574,10 @@ const MarketplaceRouteChildren: MarketplaceRouteChildren = {
   MarketplaceProvidersRoute: MarketplaceProvidersRouteWithChildren,
   MarketplaceRequestRoute: MarketplaceRequestRoute,
   MarketplaceRequestPhotosRoute: MarketplaceRequestPhotosRoute,
-  MarketplaceRequestsRoute: MarketplaceRequestsRoute,
   MarketplaceSignInRoute: MarketplaceSignInRoute,
   MarketplaceIndexRoute: MarketplaceIndexRoute,
+  MarketplaceRequestsRequestIdRoute: MarketplaceRequestsRequestIdRoute,
+  MarketplaceRequestsIndexRoute: MarketplaceRequestsIndexRoute,
 }
 
 const MarketplaceRouteWithChildren = MarketplaceRoute._addFileChildren(

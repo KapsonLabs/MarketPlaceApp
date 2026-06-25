@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   CheckCircle2,
+  ChevronRight,
   Clock3,
   FileText,
   Loader2,
@@ -11,7 +12,14 @@ import {
   ReceiptText,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/marketplace/site-header";
+import { RequestProgress } from "@/components/marketplace/request-progress";
 import { useCurrentUser } from "@/lib/marketplace/current-user";
+import {
+  formatMoney,
+  isTerminalStatus,
+  requestBalance,
+  requestTotal,
+} from "@/lib/marketplace/service-request-utils";
 import {
   listAllMyServiceRequests,
   type ServiceRequestListItem,
@@ -20,7 +28,7 @@ import { StatusBadge } from "@/components/admin/provider-badges";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/marketplace/requests")({
+export const Route = createFileRoute("/marketplace/requests/")({
   head: () => ({
     meta: [
       { title: "My requests — Casmara Systems" },
@@ -42,7 +50,7 @@ function RequestsPage() {
   });
 
   const activeCount = requests.filter(
-    (r) => r.status !== "completed" && r.status !== "cancelled" && r.status !== "rejected",
+    (r) => !isTerminalStatus(r.status) && r.status !== "completed",
   ).length;
   const completedCount = requests.filter((r) => r.status === "completed").length;
   const outstandingBalance = requests.reduce((sum, r) => sum + requestBalance(r), 0);
@@ -127,17 +135,23 @@ function StatCell({
 function RequestRow({ request }: { request: ServiceRequestListItem }) {
   const balance = requestBalance(request);
   const total = requestTotal(request);
-  const paid = parseAmount(request.amount_paid);
   const location = [request.city, request.district].filter(Boolean).join(", ");
-  const isTerminal = request.status === "rejected" || request.status === "cancelled";
+  const isTerminal = isTerminalStatus(request.status);
 
   return (
-    <article className="py-5 sm:py-6">
+    <Link
+      to="/marketplace/requests/$requestId"
+      params={{ requestId: request.id }}
+      className="group block py-5 transition-colors hover:bg-muted/20 sm:-mx-2 sm:rounded-lg sm:px-2 sm:py-6"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold leading-snug text-foreground sm:text-lg">
-            {request.title}
-          </h2>
+          <div className="flex items-start gap-2">
+            <h2 className="text-base font-semibold leading-snug text-foreground group-hover:text-primary sm:text-lg">
+              {request.title}
+            </h2>
+            <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+          </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <StatusBadge value={request.status} />
             {request.payment_status !== "unpaid" && (
@@ -177,95 +191,16 @@ function RequestRow({ request }: { request: ServiceRequestListItem }) {
           <div className="sm:col-span-2">
             <span className="text-muted-foreground">Estimate </span>
             <span className="font-medium text-foreground">{formatMoney(total)}</span>
-            {paid > 0 && (
-              <>
-                <span className="text-muted-foreground"> · paid </span>
-                <span className="font-medium text-success">{formatMoney(paid)}</span>
-              </>
-            )}
           </div>
         )}
       </dl>
 
-      {isTerminal ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          This request was {request.status.replace(/_/g, " ")} and is closed.
-        </p>
-      ) : (
-        <RequestProgress status={request.status} />
+      {!isTerminal && request.status !== "completed" && (
+        <div className="pointer-events-none mt-4">
+          <RequestProgress status={request.status} />
+        </div>
       )}
-    </article>
-  );
-}
-
-const PROGRESS_STEPS = [
-  { key: "submitted", label: "Submitted", short: "Sent" },
-  { key: "awaiting_assignment", label: "Awaiting", short: "Queue" },
-  { key: "assigned", label: "Assigned", short: "Match" },
-  { key: "in_progress", label: "In progress", short: "Work" },
-  { key: "completed", label: "Completed", short: "Done" },
-] as const;
-
-const STATUS_ORDER: Record<string, number> = {
-  submitted: 0,
-  awaiting_assignment: 1,
-  assigned: 2,
-  in_progress: 3,
-  completed: 4,
-  on_hold: 2,
-};
-
-function RequestProgress({ status }: { status: string }) {
-  const currentIndex = STATUS_ORDER[status] ?? 0;
-  const currentStep = PROGRESS_STEPS[currentIndex] ?? PROGRESS_STEPS[0];
-  const progressPct = (currentIndex / (PROGRESS_STEPS.length - 1)) * 100;
-
-  return (
-    <div className="mt-4">
-      <div className="flex items-center justify-between gap-2 text-xs">
-        <span className="font-medium text-foreground">{currentStep.label}</span>
-        <span className="text-muted-foreground">
-          Step {currentIndex + 1} of {PROGRESS_STEPS.length}
-        </span>
-      </div>
-
-      <div className="relative mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-        <div
-          className="absolute inset-y-0 left-0 rounded-full bg-primary transition-all"
-          style={{ width: `${Math.max(progressPct, 8)}%` }}
-        />
-      </div>
-
-      <div className="mt-3 flex justify-between gap-1">
-        {PROGRESS_STEPS.map((step, index) => {
-          const done = currentIndex > index;
-          const current = currentIndex === index;
-          return (
-            <div
-              key={step.key}
-              className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center"
-            >
-              <span
-                className={cn(
-                  "flex h-2 w-2 rounded-full",
-                  done && "bg-primary",
-                  current && "bg-primary ring-2 ring-primary/30 ring-offset-2 ring-offset-background",
-                  !done && !current && "bg-muted-foreground/30",
-                )}
-              />
-              <span
-                className={cn(
-                  "hidden text-[10px] leading-tight sm:block",
-                  current ? "font-medium text-foreground" : "text-muted-foreground",
-                )}
-              >
-                {step.short}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    </Link>
   );
 }
 
@@ -281,33 +216,6 @@ function formatRelativeDate(iso: string): string {
   if (diffDays === 1) return "Updated yesterday";
   if (diffDays < 7) return `Updated ${diffDays} days ago`;
   return `Updated ${date.toLocaleDateString(undefined, { month: "short", day: "numeric" })}`;
-}
-
-function parseAmount(value: string | null | undefined): number {
-  if (!value) return 0;
-  const n = Number.parseFloat(value);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function requestTotal(request: ServiceRequestListItem): number {
-  return parseAmount(request.estimated_cost);
-}
-
-function requestBalance(request: ServiceRequestListItem): number {
-  const total = requestTotal(request);
-  const paid = parseAmount(request.amount_paid);
-  if (request.payment_status === "paid") return 0;
-  return Math.max(total - paid, 0);
-}
-
-function formatMoney(amount: number, compact = false): string {
-  if (compact && amount >= 1_000_000) {
-    return `USh ${(amount / 1_000_000).toFixed(1)}M`;
-  }
-  if (compact && amount >= 100_000) {
-    return `USh ${Math.round(amount / 1000)}K`;
-  }
-  return `USh ${Math.round(amount).toLocaleString()}`;
 }
 
 function GuestState() {

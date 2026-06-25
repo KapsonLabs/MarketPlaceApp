@@ -1,28 +1,34 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Bell, CheckCheck } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
-  useAppState,
+  listNotifications,
+  unreadCount,
   markNotificationRead,
   markAllNotificationsRead,
-} from "@/lib/admin/store";
-import type { AppNotification } from "@/lib/admin/mock-data";
+  type Notification,
+} from "@/lib/notifications.api";
+
+type BellVariant = "admin" | "marketplace";
 
 function targetFor(
-  n: AppNotification,
+  n: Notification,
+  variant: BellVariant,
 ): { to: string; params: Record<string, string> } | null {
-  if (!n.entityId) return null;
-  if (n.entityId.startsWith("req-"))
-    return { to: "/admin/requests/$requestId", params: { requestId: n.entityId } };
-  if (n.entityId.startsWith("sp-"))
-    return { to: "/admin/providers/$providerId", params: { providerId: n.entityId } };
-  if (n.entityId.startsWith("tsk-"))
-    return { to: "/admin/tasks/$taskId", params: { taskId: n.entityId } };
-  if (n.entityId.startsWith("pay-"))
-    return { to: "/admin/payments/$paymentId", params: { paymentId: n.entityId } };
+  if (!n.resource_id) return null;
+  if (variant === "marketplace") {
+    if (n.resource_type === "service_request")
+      return { to: "/marketplace/requests/$requestId", params: { requestId: n.resource_id } };
+    return null;
+  }
+  if (n.resource_type === "service_request")
+    return { to: "/admin/requests/$requestId", params: { requestId: n.resource_id } };
+  if (n.resource_type === "provider")
+    return { to: "/admin/providers/$providerId", params: { providerId: n.resource_id } };
   return null;
 }
 
@@ -36,14 +42,36 @@ function timeAgo(iso: string) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export function NotificationBell() {
-  const { notifications } = useAppState();
+export function NotificationBell({ variant = "admin" }: { variant?: BellVariant } = {}) {
   const navigate = useNavigate();
-  const unread = notifications.filter((n) => !n.read).length;
+  const queryClient = useQueryClient();
 
-  function open(n: AppNotification) {
-    markNotificationRead(n.id);
-    const t = targetFor(n);
+  const { data: page, isLoading } = useQuery({
+    queryKey: ["notifications", "list"],
+    queryFn: () => listNotifications(1),
+  });
+  const { data: unread = 0 } = useQuery({
+    queryKey: ["notifications", "unread-count"],
+    queryFn: unreadCount,
+  });
+
+  const notifications = page?.results ?? [];
+
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+  const markOne = useMutation({
+    mutationFn: markNotificationRead,
+    onSuccess: invalidate,
+  });
+  const markAll = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: invalidate,
+  });
+
+  function open(n: Notification) {
+    if (!n.is_read) markOne.mutate(n.id);
+    const t = targetFor(n, variant);
     if (t) navigate({ to: t.to, params: t.params });
   }
 
@@ -64,15 +92,21 @@ export function NotificationBell() {
           <p className="text-sm font-semibold">Notifications</p>
           {unread > 0 && (
             <button
-              onClick={markAllNotificationsRead}
-              className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+              onClick={() => markAll.mutate()}
+              disabled={markAll.isPending}
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline disabled:opacity-50"
             >
               <CheckCheck className="h-3.5 w-3.5" /> Mark all read
             </button>
           )}
         </div>
         <ScrollArea className="max-h-80">
-          {notifications.length === 0 && (
+          {isLoading && (
+            <div className="flex items-center justify-center gap-2 px-4 py-8 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading…
+            </div>
+          )}
+          {!isLoading && notifications.length === 0 && (
             <p className="px-4 py-8 text-center text-sm text-muted-foreground">
               You're all caught up.
             </p>
@@ -84,20 +118,20 @@ export function NotificationBell() {
                   onClick={() => open(n)}
                   className={cn(
                     "flex w-full gap-3 px-4 py-3 text-left transition-colors hover:bg-accent/50",
-                    !n.read && "bg-primary/5",
+                    !n.is_read && "bg-primary/5",
                   )}
                 >
                   <span
                     className={cn(
                       "mt-1.5 h-2 w-2 shrink-0 rounded-full",
-                      n.read ? "bg-transparent" : "bg-primary",
+                      n.is_read ? "bg-transparent" : "bg-primary",
                     )}
                   />
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-foreground">{n.title}</p>
-                    <p className="text-xs text-muted-foreground">{n.message}</p>
+                    <p className="text-xs text-muted-foreground">{n.body}</p>
                     <p className="mt-1 text-[11px] text-muted-foreground/70">
-                      {timeAgo(n.createdAt)}
+                      {timeAgo(n.created_at)}
                     </p>
                   </div>
                 </button>

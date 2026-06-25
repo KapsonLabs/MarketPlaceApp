@@ -5,7 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DataTable } from "@/components/admin/data-table";
-import { StatusBadge } from "@/components/admin/provider-badges";
+import { StatusBadge, formatStatusLabel } from "@/components/admin/provider-badges";
 import {
   CompactFilterBar,
   SearchInput,
@@ -83,7 +83,7 @@ function RequestsPage() {
     () =>
       Array.from(new Set(requests.map((r) => r.status)))
         .sort()
-        .map((s) => ({ value: s, label: s.replace(/_/g, " ") })),
+        .map((s) => ({ value: s, label: formatStatusLabel(s) })),
     [requests],
   );
 
@@ -202,11 +202,6 @@ function RequestsPage() {
       {
         accessorKey: "status",
         header: "Status",
-        cell: ({ getValue }) => <StatusBadge value={String(getValue())} />,
-      },
-      {
-        accessorKey: "payment_status",
-        header: "Payment",
         cell: ({ getValue }) => <StatusBadge value={String(getValue())} />,
       },
       {

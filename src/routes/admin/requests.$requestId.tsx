@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   CalendarDays,
+  CheckCircle,
   Clock,
   CreditCard,
   Loader2,
@@ -19,13 +20,46 @@ import {
 import { AdminShell } from "@/components/admin/admin-shell";
 import { DataTable } from "@/components/admin/data-table";
 import { StatusBadge } from "@/components/admin/provider-badges";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { listAllProviders } from "@/lib/providers.api";
 import { listServiceCategories } from "@/lib/service-categories.api";
 import {
+  approveServiceRequest,
+  assignServiceRequest,
   getAdminServiceRequest,
+  setEstimatedCost,
   type RequestPayment,
   type ServiceRequestDetail,
 } from "@/lib/service-requests.api";
@@ -47,10 +81,52 @@ export const Route = createFileRoute("/admin/requests/$requestId")({
 
 function RequestDetailPage() {
   const { requestId } = Route.useParams();
+  const queryClient = useQueryClient();
 
   const requestQuery = useQuery({
     queryKey: ["admin-service-request", requestId],
     queryFn: () => getAdminServiceRequest(requestId),
+  });
+
+  const [approveOpen, setApproveOpen] = useState(false);
+  const [costOpen, setCostOpen] = useState(false);
+  const [estimatedCostInput, setEstimatedCostInput] = useState("");
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignProviderId, setAssignProviderId] = useState("");
+  const [assignReason, setAssignReason] = useState("");
+
+  const approveMutation = useMutation({
+    mutationFn: () => approveServiceRequest(requestId),
+    onSuccess: (data) => {
+      setApproveOpen(false);
+      queryClient.setQueryData(["admin-service-request", requestId], data);
+      queryClient.invalidateQueries({ queryKey: ["admin-service-requests"] });
+    },
+  });
+
+  const costMutation = useMutation({
+    mutationFn: (cost: string) => setEstimatedCost(requestId, cost),
+    onSuccess: (data) => {
+      setCostOpen(false);
+      setEstimatedCostInput("");
+      queryClient.setQueryData(["admin-service-request", requestId], data);
+      queryClient.invalidateQueries({ queryKey: ["admin-service-requests"] });
+    },
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: () =>
+      assignServiceRequest(requestId, {
+        provider_id: assignProviderId,
+        reason: assignReason,
+      }),
+    onSuccess: () => {
+      setAssignOpen(false);
+      setAssignProviderId("");
+      setAssignReason("");
+      queryClient.invalidateQueries({ queryKey: ["admin-service-request", requestId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-service-requests"] });
+    },
   });
 
   const providersQuery = useQuery({
@@ -116,10 +192,195 @@ function RequestDetailPage() {
       <div className="space-y-6">
         <Card className="border-border">
           <CardContent className="space-y-5 p-6">
-            <div className="flex flex-wrap gap-2">
-              <StatusBadge value={request.status} />
-              <StatusBadge value={request.priority} />
-              <StatusBadge value={request.payment_status} />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-wrap gap-2">
+                <StatusBadge value={request.status} />
+                <StatusBadge value={request.priority} />
+                <StatusBadge value={request.payment_status} />
+              </div>
+              {request.status === "submitted" && (
+                <AlertDialog open={approveOpen} onOpenChange={setApproveOpen}>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm">
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Approve Request
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Approve this request?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will approve the service request "{request.title}" and
+                        move it to the assignment stage.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    {approveMutation.isError && (
+                      <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        {(approveMutation.error as { uiMessage?: string }).uiMessage ??
+                          (approveMutation.error as Error).message ??
+                          "Failed to approve request."}
+                      </div>
+                    )}
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={approveMutation.isPending}>
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={approveMutation.isPending}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          approveMutation.mutate();
+                        }}
+                      >
+                        {approveMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Approve
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+
+              {request.status === "approved" && !request.estimated_cost && (
+                <Dialog open={costOpen} onOpenChange={setCostOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      Add Estimated Cost
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Estimated Cost</DialogTitle>
+                      <DialogDescription>
+                        Set the estimated cost for "{request.title}". A deposit of
+                        75% will be calculated automatically.
+                      </DialogDescription>
+                    </DialogHeader>
+                    {costMutation.isError && (
+                      <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        {(costMutation.error as { uiMessage?: string }).uiMessage ??
+                          (costMutation.error as Error).message ??
+                          "Failed to set estimated cost."}
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="estimated-cost">Estimated cost (USh)</Label>
+                      <Input
+                        id="estimated-cost"
+                        type="number"
+                        min="0"
+                        placeholder="e.g. 150000"
+                        value={estimatedCostInput}
+                        onChange={(e) => setEstimatedCostInput(e.target.value)}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setCostOpen(false)}
+                        disabled={costMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        disabled={!estimatedCostInput || costMutation.isPending}
+                        onClick={() => costMutation.mutate(estimatedCostInput)}
+                      >
+                        {costMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Save
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {request.status === "awaiting_assignment" && (
+                <Dialog
+                  open={assignOpen}
+                  onOpenChange={(open) => {
+                    setAssignOpen(open);
+                    if (!open) assignMutation.reset();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button size="sm">
+                      <Users className="mr-2 h-4 w-4" />
+                      Assign to Provider
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Assign to Provider</DialogTitle>
+                      <DialogDescription>
+                        Select a provider and optionally add a reason for the
+                        assignment.
+                      </DialogDescription>
+                    </DialogHeader>
+                    {assignMutation.isError && (
+                      <div className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        {(assignMutation.error as { uiMessage?: string }).uiMessage ??
+                          (assignMutation.error as Error).message ??
+                          "Failed to assign provider."}
+                      </div>
+                    )}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="assign-provider">Provider</Label>
+                        <Select
+                          value={assignProviderId}
+                          onValueChange={setAssignProviderId}
+                        >
+                          <SelectTrigger id="assign-provider">
+                            <SelectValue placeholder="Select a provider" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(providersQuery.data ?? []).map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.business_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="assign-reason">Reason</Label>
+                        <Textarea
+                          id="assign-reason"
+                          placeholder="e.g. Best rated plumber in area"
+                          value={assignReason}
+                          onChange={(e) => setAssignReason(e.target.value)}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setAssignOpen(false)}
+                        disabled={assignMutation.isPending}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        disabled={!assignProviderId || assignMutation.isPending}
+                        onClick={() => assignMutation.mutate()}
+                      >
+                        {assignMutation.isPending && (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        )}
+                        Assign
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
 
             <p className="text-sm leading-6 text-foreground/90">{request.description}</p>

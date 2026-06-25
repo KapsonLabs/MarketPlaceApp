@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/admin/notification-bell";
 import { clearAdminSession, useAdminSession } from "@/lib/admin-auth";
+import { useNotificationSocket } from "@/lib/notifications.ws";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -37,6 +38,7 @@ export function AdminShell({
   const router = useRouter();
   const session = useAdminSession();
   const user = session?.user;
+  useNotificationSocket();
   const displayName =
     user && `${user.first_name} ${user.last_name}`.trim()
       ? `${user.first_name} ${user.last_name}`.trim()

@@ -27,6 +27,7 @@ export interface ServiceRequestListItem {
   deposit_required: number | null;
   amount_paid: string;
   payment_status: string;
+  is_deposit_paid: boolean;
   cost_variance: string | null;
   assignment_type: string;
   preferred_provider: string | null;
@@ -65,7 +66,11 @@ export interface RequestAssignment {
 export interface RequestImage {
   id: string;
   image: string;
-  caption?: string;
+  caption: string;
+  file_size: number;
+  content_type: string;
+  scan_status: string;
+  created_at: string;
 }
 
 export interface ServiceRequestDetail extends ServiceRequestListItem {
@@ -176,6 +181,52 @@ export async function getAdminServiceRequest(
 ): Promise<ServiceRequestDetail> {
   const res = await api.get(`/service-requests/admin/${id}/`);
   return (res.data?.data ?? res.data) as ServiceRequestDetail;
+}
+
+/** Fetch one of the authenticated customer's own service requests. */
+export async function getMyServiceRequest(
+  id: string,
+): Promise<ServiceRequestDetail> {
+  const res = await api.get(`/service-requests/${id}/`);
+  return (res.data?.data ?? res.data) as ServiceRequestDetail;
+}
+
+export async function approveServiceRequest(
+  id: string,
+): Promise<ServiceRequestDetail> {
+  const res = await api.post(`/service-requests/admin/${id}/approve/`);
+  return (res.data?.data ?? res.data) as ServiceRequestDetail;
+}
+
+export async function setEstimatedCost(
+  id: string,
+  estimatedCost: string,
+): Promise<ServiceRequestDetail> {
+  const res = await api.post(`/service-requests/admin/${id}/estimate-cost/`, {
+    estimated_cost: estimatedCost,
+  });
+  return (res.data?.data ?? res.data) as ServiceRequestDetail;
+}
+
+export interface AssignProviderInput {
+  provider_id: string;
+  reason: string;
+}
+
+export async function assignServiceRequest(
+  id: string,
+  input: AssignProviderInput,
+): Promise<RequestAssignment> {
+  const res = await api.post(`/service-requests/admin/${id}/assign/`, input);
+  return (res.data?.data ?? res.data) as RequestAssignment;
+}
+
+export async function makeServiceRequestPayment(
+  id: string,
+  amount: string,
+): Promise<RequestPayment> {
+  const res = await api.post(`/service-requests/${id}/payments/`, { amount });
+  return (res.data?.data ?? res.data) as RequestPayment;
 }
 
 /** Derive the next page number from a DRF `next` URL, or undefined when there is none. */

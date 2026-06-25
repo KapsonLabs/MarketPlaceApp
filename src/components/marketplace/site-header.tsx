@@ -1,11 +1,16 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Home, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/admin/notification-bell";
 import { useCurrentUser, signOutUser } from "@/lib/marketplace/current-user";
+import { useNotificationSocket } from "@/lib/notifications.ws";
 
 export function SiteHeader() {
   const user = useCurrentUser();
   const navigate = useNavigate();
+
+  // Keep the bell live for signed-in customers (no-op when not authenticated).
+  useNotificationSocket();
 
   function onSignOut() {
     signOutUser();
@@ -64,6 +69,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <NotificationBell variant="marketplace" />
               <span className="hidden max-w-[140px] truncate text-xs text-muted-foreground sm:inline">
                 {user.name}
               </span>
