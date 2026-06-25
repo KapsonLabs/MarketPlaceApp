@@ -18,11 +18,26 @@ export interface CreateCategoryInput {
   icon?: string;
 }
 
-export async function listServiceCategories(): Promise<
-  Paginated<ServiceCategory>
-> {
-  const res = await api.get("/service-categories/");
+export async function listServiceCategories(
+  page = 1,
+): Promise<Paginated<ServiceCategory>> {
+  const res = await api.get("/service-categories/", { params: { page } });
   return (res.data?.data ?? res.data) as Paginated<ServiceCategory>;
+}
+
+/** Fetch every page of active service categories. */
+export async function listAllServiceCategories(): Promise<ServiceCategory[]> {
+  const items: ServiceCategory[] = [];
+  let page = 1;
+
+  while (true) {
+    const batch = await listServiceCategories(page);
+    items.push(...batch.results.filter((c) => c.is_active));
+    if (!batch.next) break;
+    page += 1;
+  }
+
+  return items.sort((a, b) => a.display_order - b.display_order);
 }
 
 export async function getServiceCategory(id: string): Promise<ServiceCategory> {

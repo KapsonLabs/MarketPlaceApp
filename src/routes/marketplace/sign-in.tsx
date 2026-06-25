@@ -1,14 +1,15 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
-import { ArrowRight, Home, KeyRound, UserRound } from "lucide-react";
+import type { AxiosError } from "axios";
+import { ArrowRight, Eye, EyeOff, KeyRound, Loader2 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/marketplace/site-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { demoUser, signInUser, type CurrentUser } from "@/lib/marketplace/current-user";
+import { getMarketplaceSession, loginMarketplace } from "@/lib/marketplace-auth";
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
@@ -16,6 +17,11 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/marketplace/sign-in")({
   validateSearch: searchSchema,
+  beforeLoad: () => {
+    if (getMarketplaceSession()) {
+      throw redirect({ to: "/marketplace/requests" });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Sign in — Casmara Systems" },
@@ -31,47 +37,45 @@ export const Route = createFileRoute("/marketplace/sign-in")({
 function SignInPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const redirect = search.redirect?.startsWith("/") ? search.redirect : "/providers?welcome=1";
+  const redirectTo = search.redirect?.startsWith("/")
+    ? search.redirect
+    : "/marketplace/requests";
   const [mode, setMode] = useState<"login" | "create">("login");
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-  });
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   function handleModeChange(value: "login" | "create") {
     setMode(value);
-    setForm({ name: "", email: "", phone: "", password: "" });
+    setUsername("");
+    setPassword("");
+    setError(null);
   }
 
-  const update = <K extends keyof typeof form>(key: K, value: (typeof form)[K]) =>
-    setForm((current) => ({ ...current, [key]: value }));
-
-  function finish(user: CurrentUser) {
-    signInUser(user);
-    const redirectUrl = new URL(redirect, window.location.origin);
-    navigate({
-      to: redirectUrl.pathname as never,
-      search: Object.fromEntries(redirectUrl.searchParams) as never,
-    });
-  }
-
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    finish({
-      id: `user-${Date.now()}`,
-      name:
-        mode === "login"
-          ? form.email
-              .split("@")[0]
-              .replace(/[._-]+/g, " ")
-              .replace(/\b\w/g, (letter) => letter.toUpperCase())
-          : form.name,
-      email: form.email,
-      phone: form.phone || "+256700000000",
-      audience: "public",
-    });
+    if (mode === "create") return;
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      await loginMarketplace({ username: username.trim(), password });
+      const redirectUrl = new URL(redirectTo, window.location.origin);
+      navigate({
+        to: redirectUrl.pathname as never,
+        search: Object.fromEntries(redirectUrl.searchParams) as never,
+      });
+    } catch (err) {
+      const axiosError = err as AxiosError & { uiMessage?: string };
+      setError(
+        axiosError.uiMessage ??
+          (err instanceof Error ? err.message : "Invalid username or password."),
+      );
+      setLoading(false);
+    }
   }
 
   return (
@@ -89,18 +93,9 @@ function SignInPage() {
                 Sign in to request facility management services.
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Create a simple marketplace account to request a vetted provider for facility
-                management services at a fee. Tenant and property checks are handled by the member
-                app.
+                Use your marketplace account to track service requests, provider assignment and
+                billing in one place.
               </p>
-              <div className="mt-8 grid gap-3 sm:max-w-sm">
-                <QuickUser
-                  icon={UserRound}
-                  title="Demo account"
-                  body="Preview the request and marketplace flow."
-                  onClick={() => finish(demoUser)}
-                />
-              </div>
             </div>
           </section>
 
@@ -112,10 +107,64 @@ function SignInPage() {
                   <TabsTrigger value="create">Create account</TabsTrigger>
                 </TabsList>
                 <TabsContent value="login" className="mt-6">
-                  <AuthForm mode="login" form={form} update={update} onSubmit={onSubmit} />
+                  <form onSubmit={onSubmit} className="space-y-4">
+                    <Field label="Username" id="username">
+                      <Input
+                        id="username"
+                        type="text"
+                        autoComplete="username"
+                        required
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        placeholder="client"
+                        disabled={loading}
+                      />
+                    </Field>
+                    <Field label="Password" id="password">
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="current-password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          disabled={loading}
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </Field>
+                    {error && (
+                      <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                        {error}
+                      </p>
+                    )}
+                    <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Log in
+                      <ArrowRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </form>
                 </TabsContent>
                 <TabsContent value="create" className="mt-6">
-                  <AuthForm mode="create" form={form} update={update} onSubmit={onSubmit} />
+                  <div className="rounded-lg border border-dashed border-border bg-muted/20 px-4 py-8 text-center">
+                    <p className="text-sm font-semibold text-foreground">Registration coming soon</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      New account signup is not available yet. Contact support if you need access.
+                    </p>
+                  </div>
                 </TabsContent>
               </Tabs>
               <p className="mt-5 text-center text-xs text-muted-foreground">
@@ -131,98 +180,6 @@ function SignInPage() {
       </main>
       <SiteFooter />
     </div>
-  );
-}
-
-function AuthForm({
-  mode,
-  form,
-  update,
-  onSubmit,
-}: {
-  mode: "login" | "create";
-  form: {
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-  };
-  update: <K extends keyof typeof form>(key: K, value: (typeof form)[K]) => void;
-  onSubmit: (e: React.FormEvent) => void;
-}) {
-  return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      {mode === "create" && (
-        <Field label="Full name" id="name">
-          <Input
-            id="name"
-            required
-            value={form.name}
-            onChange={(e) => update("name", e.target.value)}
-            placeholder="Jane Nakato"
-          />
-        </Field>
-      )}
-      <Field label="Email address" id="email">
-        <Input
-          id="email"
-          type="email"
-          required
-          value={form.email}
-          onChange={(e) => update("email", e.target.value)}
-          placeholder="you@example.com"
-        />
-      </Field>
-      {mode === "create" && (
-        <Field label="Phone number" id="phone">
-          <Input
-            id="phone"
-            value={form.phone}
-            onChange={(e) => update("phone", e.target.value)}
-            placeholder="+256..."
-          />
-        </Field>
-      )}
-      <Field label="Password" id="password">
-        <Input
-          id="password"
-          type="password"
-          required
-          minLength={6}
-          value={form.password}
-          onChange={(e) => update("password", e.target.value)}
-          placeholder="Minimum 6 characters"
-        />
-      </Field>
-      <Button type="submit" size="lg" className="w-full">
-        {mode === "login" ? "Log in" : "Create account"}
-        <ArrowRight className="ml-1 h-4 w-4" />
-      </Button>
-    </form>
-  );
-}
-
-function QuickUser({
-  icon: Icon,
-  title,
-  body,
-  onClick,
-}: {
-  icon: typeof Home;
-  title: string;
-  body: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:border-primary"
-    >
-      <Icon className="h-5 w-5 text-primary" />
-      <p className="mt-3 text-sm font-semibold text-foreground">{title}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{body}</p>
-    </button>
   );
 }
 

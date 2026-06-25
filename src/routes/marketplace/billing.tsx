@@ -245,7 +245,7 @@ function GuestState() {
           </p>
         </div>
         <Button asChild>
-          <Link to="/marketplace/sign-in" search={{ redirect: "/billing" } as never}>
+          <Link to="/marketplace/sign-in" search={{ redirect: "/marketplace/billing" } as never}>
             Sign in
           </Link>
         </Button>

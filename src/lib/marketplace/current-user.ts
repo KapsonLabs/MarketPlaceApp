@@ -1,4 +1,10 @@
 import { useEffect, useState } from "react";
+import type { ApiUser } from "@/lib/admin-auth";
+import {
+  clearMarketplaceSession,
+  getMarketplaceSession,
+  useMarketplaceSession,
+} from "@/lib/marketplace-auth";
 
 export interface CurrentUser {
   id: string;
@@ -10,48 +16,43 @@ export interface CurrentUser {
   unitNumber?: string;
 }
 
-const STORAGE_KEY = "casmara.currentUser";
+const AUTH_EVENT = "casmara-marketplace-auth";
 
-export const demoUser: CurrentUser = {
-  id: "user-demo-001",
-  name: "Demo Customer",
-  email: "customer@casmara.test",
-  phone: "+256700000000",
-  audience: "public",
-};
-
-function readStoredUser(): CurrentUser | null {
-  if (typeof window === "undefined") return null;
-  const raw = window.localStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as CurrentUser;
-  } catch {
-    window.localStorage.removeItem(STORAGE_KEY);
-    return null;
-  }
+function apiUserToCurrentUser(user: ApiUser): CurrentUser {
+  const name = `${user.first_name} ${user.last_name}`.trim() || user.username;
+  return {
+    id: user.id,
+    name,
+    email: user.email,
+    phone: "",
+    audience: "public",
+  };
 }
 
-export function signInUser(user: CurrentUser) {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-  window.dispatchEvent(new Event("casmara-auth"));
+function readCurrentUser(): CurrentUser | null {
+  const session = getMarketplaceSession();
+  return session ? apiUserToCurrentUser(session.user) : null;
 }
 
 export function signOutUser() {
-  window.localStorage.removeItem(STORAGE_KEY);
-  window.dispatchEvent(new Event("casmara-auth"));
+  clearMarketplaceSession();
 }
 
 export function useCurrentUser(): CurrentUser | null {
-  const [user, setUser] = useState<CurrentUser | null>(() => readStoredUser());
+  const session = useMarketplaceSession();
+  const [user, setUser] = useState<CurrentUser | null>(() => readCurrentUser());
 
   useEffect(() => {
-    const sync = () => setUser(readStoredUser());
+    setUser(session ? apiUserToCurrentUser(session.user) : null);
+  }, [session]);
+
+  useEffect(() => {
+    const sync = () => setUser(readCurrentUser());
     window.addEventListener("storage", sync);
-    window.addEventListener("casmara-auth", sync);
+    window.addEventListener(AUTH_EVENT, sync);
     return () => {
       window.removeEventListener("storage", sync);
-      window.removeEventListener("casmara-auth", sync);
+      window.removeEventListener(AUTH_EVENT, sync);
     };
   }, []);
 

@@ -74,6 +74,80 @@ export interface ServiceRequestDetail extends ServiceRequestListItem {
   images: RequestImage[];
 }
 
+export interface CreateServiceRequestInput {
+  service_category: string;
+  priority: string;
+  title: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  formatted_address: string;
+  city: string;
+  district: string;
+  contact_person: string;
+  contact_phone: string;
+  contact_alternate_phone?: string;
+  contact_email: string;
+  preferred_date?: string | null;
+  preferred_time?: string | null;
+  estimated_budget?: string | null;
+  assignment_type: "platform_assigned" | "customer_selected";
+  preferred_provider?: string | null;
+}
+
+export interface RequestAttachment {
+  id: string;
+  image: string;
+  caption: string;
+  file_size: number;
+  content_type: string;
+  scan_status: string;
+  created_at: string;
+}
+
+export async function uploadServiceRequestAttachment(
+  requestId: string,
+  file: File,
+  caption: string,
+): Promise<RequestAttachment> {
+  const formData = new FormData();
+  formData.append("image", file);
+  formData.append("caption", caption);
+
+  const res = await api.post(`/service-requests/${requestId}/attachments/`, formData);
+  return (res.data?.data ?? res.data) as RequestAttachment;
+}
+
+export async function createServiceRequest(
+  payload: CreateServiceRequestInput,
+): Promise<ServiceRequestListItem> {
+  const res = await api.post("/service-requests/", payload);
+  return (res.data?.data ?? res.data) as ServiceRequestListItem;
+}
+
+export async function listMyServiceRequests(
+  page: number,
+): Promise<Paginated<ServiceRequestListItem>> {
+  const res = await api.get("/service-requests/", { params: { page } });
+  return (res.data?.data ?? res.data) as Paginated<ServiceRequestListItem>;
+}
+
+/** Fetch every page of the authenticated user's service requests. */
+export async function listAllMyServiceRequests(): Promise<ServiceRequestListItem[]> {
+  const items: ServiceRequestListItem[] = [];
+  let page = 1;
+
+  while (true) {
+    const batch = await listMyServiceRequests(page);
+    items.push(...batch.results);
+    const next = pageFromNext(batch.next);
+    if (next == null) break;
+    page = next;
+  }
+
+  return items;
+}
+
 export async function listAdminServiceRequests(
   page: number,
 ): Promise<Paginated<ServiceRequestListItem>> {

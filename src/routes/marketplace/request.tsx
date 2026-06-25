@@ -1,22 +1,21 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate, ClientOnly } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import type { AxiosError } from "axios";
 import { z } from "zod";
 import {
   Loader2,
   ArrowRight,
   ArrowLeft,
-  Upload,
-  X,
   MapPin,
-  User,
   LockKeyhole,
   Wrench,
   ClipboardCheck,
   Check,
+  Phone,
 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/marketplace/site-header";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -27,39 +26,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { specialties, getProvider, providerCover } from "@/data/providers";
-import { submitRequest } from "@/lib/marketplace/requests.functions";
 import { useCurrentUser } from "@/lib/marketplace/current-user";
-import { ClientOnly } from "@tanstack/react-router";
 import { LocationPicker, type PickedLocation } from "@/components/marketplace/location-picker";
-import type { RequestStepHistoryEntry, RequestWizardStep } from "@/lib/marketplace/request-types";
-import { ASSESSMENT_FEE } from "@/lib/marketplace/billing";
+import { listAllServiceCategories } from "@/lib/service-categories.api";
+import { createServiceRequest } from "@/lib/service-requests.api";
+import { getProvider, listAllProviders } from "@/lib/providers.api";
+import { cn } from "@/lib/utils";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
-const MAX_PHOTOS = 5;
-const DRAFT_KEY = "casmara.request.draft.v1";
-const STEP_NAMES: RequestWizardStep[] = ["job", "location", "review", "submitted"];
-
-interface UploadedPhoto {
-  name: string;
-  type: string;
-  size: number;
-  dataUrl: string;
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(String(r.result));
-    r.onerror = () => reject(r.error);
-    r.readAsDataURL(file);
-  });
-}
+const DRAFT_KEY = "casmara.request.draft.v2";
+const PRIORITIES = ["low", "normal", "high", "emergency"] as const;
+const STEPS = ["job", "location", "contact", "review"] as const;
+type Step = (typeof STEPS)[number];
 
 const searchSchema = z.object({
   providerId: z.string().optional(),
-  specialty: z.string().optional(),
+  categoryId: z.string().optional(),
 });
 
 export const Route = createFileRoute("/marketplace/request")({
@@ -69,49 +50,85 @@ export const Route = createFileRoute("/marketplace/request")({
       { title: "Request a service — Casmara Systems" },
       {
         name: "description",
-        content:
-          "Submit a maintenance request. Tenants get routed into their property's maintenance queue automatically.",
+        content: "Submit a service request with job details, location, and contact information.",
       },
     ],
   }),
   component: RequestPage,
 });
 
+interface RequestForm {
+  serviceCategoryId: string;
+  priority: (typeof PRIORITIES)[number];
+  title: string;
+  description: string;
+  estimatedBudget: string;
+  formattedAddress: string;
+  city: string;
+  district: string;
+  contactPerson: string;
+  contactPhone: string;
+  contactAlternatePhone: string;
+  contactEmail: string;
+  preferredDate: string;
+  preferredTime: string;
+  assignmentType: "platform_assigned" | "customer_selected";
+  preferredProviderId: string;
+}
+
+const emptyForm = (): RequestForm => ({
+  serviceCategoryId: "",
+  priority: "normal",
+  title: "",
+  description: "",
+  estimatedBudget: "",
+  formattedAddress: "",
+  city: "",
+  district: "",
+  contactPerson: "",
+  contactPhone: "",
+  contactAlternatePhone: "",
+  contactEmail: "",
+  preferredDate: "",
+  preferredTime: "",
+  assignmentType: "platform_assigned",
+  preferredProviderId: "",
+});
+
 function RequestPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const user = useCurrentUser();
-  const preferred = search.providerId ? getProvider(search.providerId) : undefined;
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
-  const [photoError, setPhotoError] = useState<string | null>(null);
   const [location, setLocation] = useState<PickedLocation | null>(null);
-  const [step, setStep] = useState<0 | 1 | 2>(0);
-  const [stepHistory, setStepHistory] = useState<RequestStepHistoryEntry[]>(() => [
-    { step: "job", at: new Date().toISOString() },
-  ]);
+  const [stepIndex, setStepIndex] = useState(0);
   const [resumed, setResumed] = useState(false);
+  const [form, setForm] = useState<RequestForm>(() => ({
+    ...emptyForm(),
+    serviceCategoryId: search.categoryId ?? "",
+    preferredProviderId: search.providerId ?? "",
+    assignmentType: search.providerId ? "customer_selected" : "platform_assigned",
+  }));
 
-  // Min value for the datetime-local input (now, rounded to the minute, in local time).
-  function localNowForInput(): string {
-    const d = new Date();
-    d.setSeconds(0, 0);
-    const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-  }
-  const minScheduledFor = localNowForInput();
-
-  const [form, setForm] = useState({
-    specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
-    title: "",
-    description: "",
-    priority: "Medium" as "Low" | "Medium" | "High" | "Emergency",
-    scheduledFor: "" as string,
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ["service-categories"],
+    queryFn: listAllServiceCategories,
   });
 
-  // Hydrate draft on mount (client-only).
+  const { data: providers = [] } = useQuery({
+    queryKey: ["providers", "all"],
+    queryFn: listAllProviders,
+    enabled: form.assignmentType === "customer_selected",
+  });
+
+  const { data: pinnedProvider } = useQuery({
+    queryKey: ["provider", search.providerId],
+    queryFn: () => getProvider(search.providerId!),
+    enabled: !!search.providerId,
+  });
+
   const hydrated = useRef(false);
   useEffect(() => {
     if (hydrated.current) return;
@@ -121,129 +138,123 @@ function RequestPage() {
       const raw = window.localStorage.getItem(DRAFT_KEY);
       if (!raw) return;
       const d = JSON.parse(raw) as {
-        form?: typeof form;
-        step?: 0 | 1 | 2;
+        form?: RequestForm;
+        stepIndex?: number;
         location?: PickedLocation | null;
-        photos?: UploadedPhoto[];
-        stepHistory?: RequestStepHistoryEntry[];
       };
-      if (d.form) setForm(d.form);
-      if (typeof d.step === "number") setStep(d.step);
+      if (d.form) setForm((f) => ({ ...f, ...d.form }));
+      if (typeof d.stepIndex === "number") setStepIndex(d.stepIndex);
       if (d.location) setLocation(d.location);
-      if (d.photos) setPhotos(d.photos);
-      if (d.stepHistory) setStepHistory(d.stepHistory);
       setResumed(true);
     } catch {
       // ignore corrupt draft
     }
   }, []);
 
-  // Auto-save draft on changes.
+  useEffect(() => {
+    if (!user) return;
+    setForm((f) => ({
+      ...f,
+      contactPerson: f.contactPerson || user.name,
+      contactEmail: f.contactEmail || user.email,
+    }));
+  }, [user]);
+
+  useEffect(() => {
+    if (categories.length && !form.serviceCategoryId && !search.categoryId) {
+      setForm((f) => ({ ...f, serviceCategoryId: categories[0].id }));
+    }
+  }, [categories, form.serviceCategoryId, search.categoryId]);
+
   useEffect(() => {
     if (!hydrated.current || typeof window === "undefined") return;
     try {
-      window.localStorage.setItem(
-        DRAFT_KEY,
-        JSON.stringify({ form, step, location, photos, stepHistory }),
-      );
+      window.localStorage.setItem(DRAFT_KEY, JSON.stringify({ form, stepIndex, location }));
     } catch {
-      // storage may be full or unavailable
+      // storage may be full
     }
-  }, [form, step, location, photos, stepHistory]);
+  }, [form, stepIndex, location]);
 
-  function recordStep(next: 0 | 1 | 2) {
-    const stepName = STEP_NAMES[next];
-    setStepHistory((h) =>
-      h.some((e) => e.step === stepName)
-        ? h
-        : [...h, { step: stepName, at: new Date().toISOString() }],
-    );
-  }
+  const update = <K extends keyof RequestForm>(key: K, value: RequestForm[K]) =>
+    setForm((f) => ({ ...f, [key]: value }));
 
-  const update = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  const scheduledInPast = (() => {
-    if (!form.scheduledFor) return false;
-    const t = Date.parse(form.scheduledFor);
-    if (Number.isNaN(t)) return true;
-    return t < Date.now() - 60_000;
-  })();
-
-  const stepValid =
-    step === 0
-      ? form.title.trim().length >= 3 &&
-        form.description.trim().length >= 10 &&
-        !scheduledInPast
-      : step === 1
-        ? !!location
-        : true;
+  const step = STEPS[stepIndex];
+  const stepValid = validateStep(step, form, location);
 
   function nextStep() {
     setError(null);
-    if (!stepValid) {
-      setError(
-        step === 0
-          ? scheduledInPast
-            ? "Scheduled date can't be in the past. Pick a future date and time."
-            : "Add a short title and a description (10+ characters)."
-          : "Share your location or drop a pin to continue.",
-      );
+    if (!stepValid.ok) {
+      setError(stepValid.message);
       return;
     }
-    setStep((s) => {
-      const ns = (s < 2 ? s + 1 : s) as 0 | 1 | 2;
-      recordStep(ns);
-      return ns;
-    });
+    setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
   }
+
   function prevStep() {
     setError(null);
-    setStep((s) => (s > 0 ? ((s - 1) as 0 | 1 | 2) : s));
+    setStepIndex((i) => Math.max(i - 1, 0));
   }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    // Enter in an input fires form submit on any step — only advance or submit on review.
+    if (stepIndex < STEPS.length - 1) {
+      if (!stepValid.ok) {
+        setError(stepValid.message);
+        return;
+      }
+      setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
+      return;
+    }
+
     if (!user) {
-      navigate({ to: "/marketplace/sign-in", search: { redirect: "/request" } as never });
-      return;
-    }
-    if (!location) {
-      setError("Please share your location or drop a pin on the map.");
-      return;
-    }
-    if (scheduledInPast) {
-      setError("Scheduled date can't be in the past. Pick a future date and time.");
-      setStep(0);
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const res = await submitRequest({
-        data: {
-          audience: user.audience,
-          userId: user.id,
-          propertyCode: user.propertyCode,
-          unitNumber: user.unitNumber,
-          specialty: form.specialty as never,
-          title: form.title,
-          description: form.description,
-          priority: form.priority,
-          preferredProviderId: preferred?.id,
-          photos,
-          location: {
-            lat: location.lat,
-            lng: location.lng,
-            accuracy: location.accuracy,
-          },
-          scheduledFor: form.scheduledFor
-            ? new Date(form.scheduledFor).toISOString()
-            : undefined,
-          wizardStep: "submitted",
-          stepHistory,
-        },
+      navigate({
+        to: "/marketplace/sign-in",
+        search: { redirect: "/marketplace/request" } as never,
       });
+      return;
+    }
+
+    const check = validateStep("review", form, location);
+    if (!check.ok || !location) {
+      setError(check.message ?? "Complete all required fields.");
+      return;
+    }
+
+    await submitRequest();
+  }
+
+  async function submitRequest() {
+    if (!location) return;
+
+    setSubmitting(true);
+    setError(null);
+    try {
+      const budget = form.estimatedBudget.trim();
+      const result = await createServiceRequest({
+        service_category: form.serviceCategoryId,
+        priority: form.priority,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        latitude: location.lat,
+        longitude: location.lng,
+        formatted_address: form.formattedAddress.trim(),
+        city: form.city.trim(),
+        district: form.district.trim(),
+        contact_person: form.contactPerson.trim(),
+        contact_phone: form.contactPhone.trim(),
+        contact_alternate_phone: form.contactAlternatePhone.trim(),
+        contact_email: form.contactEmail.trim(),
+        preferred_date: form.preferredDate || null,
+        preferred_time: form.preferredTime ? formatApiTime(form.preferredTime) : null,
+        estimated_budget: budget ? formatApiMoney(budget) : null,
+        assignment_type: form.assignmentType,
+        preferred_provider:
+          form.assignmentType === "customer_selected" ? form.preferredProviderId || null : null,
+      });
+
       if (typeof window !== "undefined") {
         try {
           window.localStorage.removeItem(DRAFT_KEY);
@@ -251,436 +262,462 @@ function RequestPage() {
           // ignore
         }
       }
-      navigate({
-        to: "/marketplace/request/success",
-        search: { id: res.id } as never,
+
+      await navigate({
+        to: "/marketplace/request-photos",
+        search: { id: result.id, title: result.title },
+        replace: true,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      const axiosError = err as AxiosError & { uiMessage?: string };
+      setError(
+        axiosError.uiMessage ??
+          (err instanceof Error ? err.message : "Something went wrong. Please try again."),
+      );
       setSubmitting(false);
     }
   }
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || !files.length) return;
-    setPhotoError(null);
-    const next: UploadedPhoto[] = [...photos];
-    for (const file of Array.from(files)) {
-      if (next.length >= MAX_PHOTOS) {
-        setPhotoError(`You can upload up to ${MAX_PHOTOS} photos.`);
-        break;
-      }
-      if (!ACCEPTED_TYPES.includes(file.type)) {
-        setPhotoError(`"${file.name}" is not a supported image (JPG, PNG, WebP).`);
-        continue;
-      }
-      if (file.size > MAX_BYTES) {
-        setPhotoError(`"${file.name}" exceeds the 5 MB limit.`);
-        continue;
-      }
-      try {
-        const dataUrl = await readFileAsDataUrl(file);
-        next.push({ name: file.name, type: file.type, size: file.size, dataUrl });
-      } catch {
-        setPhotoError(`Could not read "${file.name}".`);
-      }
+  function discardDraft() {
+    if (typeof window !== "undefined") {
+      window.localStorage.removeItem(DRAFT_KEY);
     }
-    setPhotos(next);
+    setResumed(false);
+    setForm({
+      ...emptyForm(),
+      serviceCategoryId: categories[0]?.id ?? "",
+      preferredProviderId: search.providerId ?? "",
+      assignmentType: search.providerId ? "customer_selected" : "platform_assigned",
+    });
+    setLocation(null);
+    setStepIndex(0);
   }
 
-  function removePhoto(idx: number) {
-    setPhotos((p) => p.filter((_, i) => i !== idx));
-  }
+  const categoryName =
+    categories.find((c) => c.id === form.serviceCategoryId)?.name ?? "Service category";
+  const selectedProvider =
+    providers.find((p) => p.id === form.preferredProviderId) ?? pinnedProvider;
 
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
       <main className="flex-1">
-        <div className="container mx-auto max-w-3xl px-4 py-10">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Request a service</h1>
-          <p className="mt-2 text-muted-foreground">
-            Tell us what you need. We'll route it to the right pro and, if you're a tenant, log it
-            into your property's maintenance queue.
-          </p>
+        <div className="border-b border-border bg-muted/20">
+          <div className="container mx-auto max-w-2xl px-4 py-6 sm:py-8">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+              Request a service
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+              Describe the job, pin the location, and we&apos;ll match you with a provider.
+            </p>
+            <Stepper stepIndex={stepIndex} onJump={(i) => i <= stepIndex && setStepIndex(i)} />
+          </div>
+        </div>
 
-          <Stepper step={step} history={stepHistory} onJump={(i) => {
-            // allow jumping back to any previously visited step
-            const visited = stepHistory.some((e) => e.step === STEP_NAMES[i]);
-            if (visited && i <= 2) {
-              setStep(i as 0 | 1 | 2);
-              setError(null);
-            }
-          }} />
-
+        <div className="container mx-auto max-w-2xl px-4 py-6 sm:py-8">
           {resumed && (
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-              <span className="text-foreground">
-                Resumed your saved draft from this device.
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (typeof window !== "undefined") {
-                    window.localStorage.removeItem(DRAFT_KEY);
-                  }
-                  setResumed(false);
-                  setForm({
-                    specialty: search.specialty ?? preferred?.specialty ?? "Plumbing",
-                    title: "",
-                    description: "",
-                    priority: "Medium",
-                    scheduledFor: "",
-                  });
-                  setLocation(null);
-                  setPhotos([]);
-                  setStep(0);
-                  setStepHistory([{ step: "job", at: new Date().toISOString() }]);
-                }}
-              >
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+              <span>Resumed your saved draft.</span>
+              <Button type="button" variant="ghost" size="sm" onClick={discardDraft}>
                 Discard draft
               </Button>
             </div>
           )}
 
           {!user && (
-            <Card className="mt-6 border-primary/40 bg-primary/5">
-              <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <LockKeyhole className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Sign in to continue</p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Sign in with your marketplace account before a provider can be assigned at a
-                      fee.
-                    </p>
-                  </div>
+            <div className="mb-6 flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <LockKeyhole className="h-5 w-5" />
                 </div>
-                <Button asChild className="shrink-0">
-                  <Link to="/marketplace/sign-in" search={{ redirect: "/request" } as never}>
-                    Sign in
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {preferred && (
-            <Card className="mt-6 border-primary/40 bg-primary/5">
-              <CardContent className="flex items-center gap-4 p-4">
-                <img
-                  src={providerCover(preferred)}
-                  alt={preferred.company}
-                  className="h-12 w-16 rounded-md object-cover"
-                  loading="lazy"
-                />
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">Requested provider</p>
-                  <p className="font-semibold text-foreground">{preferred.company}</p>
+                <div>
+                  <p className="font-semibold text-foreground">Sign in to submit</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    You can fill in the form now — sign in before submitting.
+                  </p>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {preferred.specialty} • {preferred.city}
-                </span>
-              </CardContent>
-            </Card>
-          )}
-
-          <form onSubmit={onSubmit} className="mt-8 space-y-8">
-            {/* Signed-in user */}
-            <Card className="border-border">
-              <CardContent className="flex items-center gap-4 p-6">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <User className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  {user ? (
-                    <>
-                      <p className="text-sm font-semibold text-foreground">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {user.email}
-                        {user.audience === "tenant" && user.propertyCode && (
-                          <>
-                            {" "}
-                            • {user.propertyCode} / Unit {user.unitNumber}
-                          </>
-                        )}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-semibold text-foreground">Guest user</p>
-                      <p className="text-xs text-muted-foreground">
-                        Sign in before submitting this service request.
-                      </p>
-                    </>
-                  )}
-                </div>
-                <span className="rounded-full border border-border bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                  {user?.audience ?? "guest"}
-                </span>
-              </CardContent>
-            </Card>
-
-            {/* Step 0 — Job */}
-            {step === 0 && (
-            <Card className="border-border">
-              <CardContent className="space-y-4 p-6">
-                <h2 className="text-lg font-semibold text-foreground">The job</h2>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Service type" id="specialty">
-                    <Select value={form.specialty} onValueChange={(v) => update("specialty", v)}>
-                      <SelectTrigger id="specialty">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {specialties.map((s) => (
-                          <SelectItem key={s} value={s}>
-                            {s}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                  <Field label="Priority" id="priority">
-                    <Select
-                      value={form.priority}
-                      onValueChange={(v) => update("priority", v as typeof form.priority)}
-                    >
-                      <SelectTrigger id="priority">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(["Low", "Medium", "High", "Emergency"] as const).map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {p}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </div>
-                <Field label="Title" id="title" hint="A short summary, e.g. 'Kitchen tap leaking'">
-                  <Input
-                    id="title"
-                    required
-                    minLength={3}
-                    value={form.title}
-                    onChange={(e) => update("title", e.target.value)}
-                  />
-                </Field>
-                <Field label="Describe the issue" id="desc">
-                  <Textarea
-                    id="desc"
-                    required
-                    minLength={10}
-                    rows={5}
-                    value={form.description}
-                    onChange={(e) => update("description", e.target.value)}
-                  />
-                </Field>
-                <Field
-                  label="Schedule assessment (optional)"
-                  id="scheduledFor"
-                  hint="Leave empty to have an assessor dispatched as soon as possible."
+              </div>
+              <Button asChild size="sm" className="shrink-0">
+                <Link
+                  to="/marketplace/sign-in"
+                  search={{ redirect: "/marketplace/request" } as never}
                 >
-                  <Input
-                    id="scheduledFor"
-                    type="datetime-local"
-                    min={minScheduledFor}
-                    value={form.scheduledFor}
-                    onChange={(e) => update("scheduledFor", e.target.value)}
-                  />
-                  {scheduledInPast && (
-                    <p className="mt-1 text-xs text-destructive">
-                      Scheduled date can't be in the past.
-                    </p>
-                  )}
-                </Field>
-              </CardContent>
-            </Card>
+                  Sign in
+                </Link>
+              </Button>
+            </div>
+          )}
+
+          {pinnedProvider && (
+            <div className="mb-6 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+              <p className="text-xs text-muted-foreground">Preferred provider</p>
+              <p className="font-semibold text-foreground">{pinnedProvider.business_name}</p>
+            </div>
+          )}
+
+          <form onSubmit={onSubmit} className="space-y-6">
+            {step === "job" && (
+              <section className="space-y-4">
+                <SectionHeading icon={Wrench} title="Job details" />
+                {categoriesLoading ? (
+                  <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading categories…
+                  </div>
+                ) : (
+                  <>
+                    <Field label="Service category" id="category" required>
+                      <Select
+                        value={form.serviceCategoryId}
+                        onValueChange={(v) => update("serviceCategoryId", v)}
+                      >
+                        <SelectTrigger id="category">
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                              {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Priority" id="priority" required>
+                        <Select
+                          value={form.priority}
+                          onValueChange={(v) =>
+                            update("priority", v as RequestForm["priority"])
+                          }
+                        >
+                          <SelectTrigger id="priority">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PRIORITIES.map((p) => (
+                              <SelectItem key={p} value={p}>
+                                {prettify(p)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                      <Field
+                        label="Estimated budget (UGX)"
+                        id="budget"
+                        hint="Optional — helps providers quote accurately."
+                      >
+                        <Input
+                          id="budget"
+                          type="number"
+                          min={0}
+                          step={1000}
+                          inputMode="numeric"
+                          placeholder="50000"
+                          value={form.estimatedBudget}
+                          onChange={(e) => update("estimatedBudget", e.target.value)}
+                        />
+                      </Field>
+                    </div>
+
+                    <Field label="Title" id="title" required hint="Short summary of the issue">
+                      <Input
+                        id="title"
+                        required
+                        minLength={3}
+                        placeholder="Fix leaking kitchen tap"
+                        value={form.title}
+                        onChange={(e) => update("title", e.target.value)}
+                      />
+                    </Field>
+
+                    <Field label="Description" id="description" required>
+                      <Textarea
+                        id="description"
+                        required
+                        minLength={10}
+                        rows={5}
+                        placeholder="Describe what's wrong and any access details…"
+                        value={form.description}
+                        onChange={(e) => update("description", e.target.value)}
+                      />
+                    </Field>
+                  </>
+                )}
+              </section>
             )}
 
-            {/* Step 1 — Location & photos */}
-            {step === 1 && (
-            <>
-            <Card className="border-border">
-              <CardContent className="space-y-3 p-6">
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary" />
-                  <h2 className="text-lg font-semibold text-foreground">Service location</h2>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  We use your coordinates to dispatch the nearest provider.
-                </p>
+            {step === "location" && (
+              <section className="space-y-4">
+                <SectionHeading
+                  icon={MapPin}
+                  title="Service location"
+                  subtitle="Pin the exact spot on the map, then confirm the address."
+                />
                 <ClientOnly
-                  fallback={<div className="h-72 rounded-lg border border-dashed border-border" />}
+                  fallback={<div className="h-64 rounded-lg border border-dashed border-border" />}
                 >
                   <LocationPicker value={location} onChange={setLocation} />
                 </ClientOnly>
-              </CardContent>
-            </Card>
 
-            <Card className="border-border">
-              <CardContent className="space-y-2 p-6">
-                  <Label htmlFor="photos">Photos (optional)</Label>
-                  <label
-                    htmlFor="photos"
-                    className="flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/40 p-6 text-center transition-colors hover:border-primary"
-                  >
-                    <Upload className="h-6 w-6 text-muted-foreground" />
-                    <p className="text-sm font-medium text-foreground">Click to upload photos</p>
-                    <p className="text-xs text-muted-foreground">
-                      JPG, PNG or WebP — up to 5 MB each, max {MAX_PHOTOS} photos
-                    </p>
-                    <input
-                      id="photos"
-                      type="file"
-                      multiple
-                      accept={ACCEPTED_TYPES.join(",")}
-                      className="hidden"
-                      onChange={(e) => {
-                        handleFiles(e.target.files);
-                        e.target.value = "";
+                <Field label="Street address" id="formattedAddress" required>
+                  <Input
+                    id="formattedAddress"
+                    required
+                    placeholder="123 Kampala Road"
+                    value={form.formattedAddress}
+                    onChange={(e) => update("formattedAddress", e.target.value)}
+                  />
+                </Field>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="City" id="city" required>
+                    <Input
+                      id="city"
+                      required
+                      placeholder="Kampala"
+                      value={form.city}
+                      onChange={(e) => update("city", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="District" id="district">
+                    <Input
+                      id="district"
+                      placeholder="Kampala"
+                      value={form.district}
+                      onChange={(e) => update("district", e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </section>
+            )}
+
+            {step === "contact" && (
+              <section className="space-y-4">
+                <SectionHeading
+                  icon={Phone}
+                  title="Contact & scheduling"
+                  subtitle="Who should the provider reach, and when works best?"
+                />
+
+                <Field label="Contact person" id="contactPerson" required>
+                  <Input
+                    id="contactPerson"
+                    required
+                    placeholder="Jane Doe"
+                    value={form.contactPerson}
+                    onChange={(e) => update("contactPerson", e.target.value)}
+                  />
+                </Field>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Phone" id="contactPhone" required>
+                    <Input
+                      id="contactPhone"
+                      type="tel"
+                      required
+                      placeholder="+256700000000"
+                      value={form.contactPhone}
+                      onChange={(e) => update("contactPhone", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Alternate phone" id="contactAlternatePhone">
+                    <Input
+                      id="contactAlternatePhone"
+                      type="tel"
+                      placeholder="Optional"
+                      value={form.contactAlternatePhone}
+                      onChange={(e) => update("contactAlternatePhone", e.target.value)}
+                    />
+                  </Field>
+                </div>
+
+                <Field label="Email" id="contactEmail" required>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    required
+                    placeholder="jane@example.com"
+                    value={form.contactEmail}
+                    onChange={(e) => update("contactEmail", e.target.value)}
+                  />
+                </Field>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Preferred date" id="preferredDate" hint="Optional">
+                    <Input
+                      id="preferredDate"
+                      type="date"
+                      min={todayInput()}
+                      value={form.preferredDate}
+                      onChange={(e) => update("preferredDate", e.target.value)}
+                    />
+                  </Field>
+                  <Field label="Preferred time" id="preferredTime" hint="Optional">
+                    <Input
+                      id="preferredTime"
+                      type="time"
+                      value={form.preferredTime}
+                      onChange={(e) => update("preferredTime", e.target.value)}
+                    />
+                  </Field>
+                </div>
+              </section>
+            )}
+
+            {step === "review" && (
+              <section className="space-y-5">
+                <SectionHeading
+                  icon={ClipboardCheck}
+                  title="Assignment & review"
+                  subtitle="Choose how providers are matched, then confirm your details."
+                />
+
+                <div className="space-y-3">
+                  <Label>Provider assignment</Label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <AssignmentOption
+                      active={form.assignmentType === "platform_assigned"}
+                      title="Platform matched"
+                      body="We'll assign the best available provider."
+                      onClick={() => {
+                        update("assignmentType", "platform_assigned");
+                        update("preferredProviderId", "");
                       }}
                     />
-                  </label>
-                  {photoError && <p className="text-xs text-destructive">{photoError}</p>}
-                  {photos.length > 0 && (
-                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
-                      {photos.map((p, i) => (
-                        <div
-                          key={i}
-                          className="group relative aspect-square overflow-hidden rounded-md border border-border"
-                        >
-                          <img
-                            src={p.dataUrl}
-                            alt={p.name}
-                            className="h-full w-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removePhoto(i)}
-                            className="absolute right-1 top-1 rounded-full bg-background/90 p-1 text-foreground shadow opacity-0 transition-opacity group-hover:opacity-100"
-                            aria-label={`Remove ${p.name}`}
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-              </CardContent>
-            </Card>
-            </>
-            )}
-
-            {/* Step 2 — Review */}
-            {step === 2 && (
-              <Card className="border-border">
-                <CardContent className="space-y-4 p-6">
-                  <div className="flex items-center gap-2">
-                    <ClipboardCheck className="h-4 w-4 text-primary" />
-                    <h2 className="text-lg font-semibold text-foreground">Review your request</h2>
-                  </div>
-                  <dl className="grid gap-3 sm:grid-cols-2">
-                    <ReviewRow label="Service" value={form.specialty} />
-                    <ReviewRow label="Priority" value={form.priority} />
-                    <ReviewRow label="Title" value={form.title || "—"} />
-                    <ReviewRow
-                      label="Provider"
-                      value={preferred ? preferred.company : "Auto-match"}
+                    <AssignmentOption
+                      active={form.assignmentType === "customer_selected"}
+                      title="Choose a provider"
+                      body="Pick a specific provider from the marketplace."
+                      onClick={() => update("assignmentType", "customer_selected")}
                     />
+                  </div>
+
+                  {form.assignmentType === "customer_selected" && (
+                    <Field label="Preferred provider" id="preferredProvider" required>
+                      <Select
+                        value={form.preferredProviderId}
+                        onValueChange={(v) => update("preferredProviderId", v)}
+                      >
+                        <SelectTrigger id="preferredProvider">
+                          <SelectValue placeholder="Select a provider" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {providers.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.business_name}
+                              {p.city ? ` · ${p.city}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
+                </div>
+
+                <dl className="divide-y divide-border rounded-lg border border-border">
+                  <ReviewRow label="Category" value={categoryName} />
+                  <ReviewRow label="Priority" value={prettify(form.priority)} />
+                  <ReviewRow label="Title" value={form.title} />
+                  <ReviewRow label="Description" value={form.description} />
+                  {form.estimatedBudget && (
                     <ReviewRow
-                      label="Assessment"
+                      label="Budget"
+                      value={`USh ${Number(form.estimatedBudget).toLocaleString()}`}
+                    />
+                  )}
+                  <ReviewRow
+                    label="Location"
+                    value={[form.formattedAddress, form.city, form.district]
+                      .filter(Boolean)
+                      .join(", ")}
+                  />
+                  {location && (
+                    <ReviewRow
+                      label="Coordinates"
+                      value={`${location.lat.toFixed(5)}, ${location.lng.toFixed(5)}`}
+                    />
+                  )}
+                  <ReviewRow label="Contact" value={form.contactPerson} />
+                  <ReviewRow label="Phone" value={form.contactPhone} />
+                  <ReviewRow label="Email" value={form.contactEmail} />
+                  {(form.preferredDate || form.preferredTime) && (
+                    <ReviewRow
+                      label="Preferred slot"
                       value={
-                        form.scheduledFor
-                          ? `Scheduled for ${new Date(form.scheduledFor).toLocaleString()}`
-                          : "Dispatch as soon as possible"
+                        [form.preferredDate, form.preferredTime].filter(Boolean).join(" at ") ||
+                        "—"
                       }
                     />
-                    <ReviewRow
-                      label="Location"
-                      value={
-                        location
-                          ? `${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
-                          : "—"
-                      }
-                      full
-                    />
-                    <ReviewRow label="Description" value={form.description || "—"} full />
-                  </dl>
-                  <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm">
-                    <p className="font-semibold text-foreground">
-                      How billing works
-                    </p>
-                    <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
-                      <li>
-                        A non-refundable assessment fee of{" "}
-                        <span className="font-medium text-foreground">
-                          USh {ASSESSMENT_FEE.toLocaleString()}
-                        </span>{" "}
-                        is charged on submit. An assessor is then dispatched.
-                      </li>
-                      <li>
-                        After the visit, a detailed work invoice is issued for your approval.
-                      </li>
-                      <li>
-                        A vetted service provider is assigned and the job is tracked end-to-end.
-                      </li>
-                      <li>
-                        You pay the remaining balance only once the work is completed.
-                      </li>
-                    </ol>
-                  </div>
-                  {photos.length > 0 && (
-                    <div>
-                      <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                        Photos ({photos.length})
-                      </p>
-                      <div className="grid grid-cols-5 gap-2">
-                        {photos.map((p, i) => (
-                          <img
-                            key={i}
-                            src={p.dataUrl}
-                            alt={p.name}
-                            className="aspect-square w-full rounded-md border border-border object-cover"
-                          />
-                        ))}
-                      </div>
-                    </div>
                   )}
-                </CardContent>
-              </Card>
+                  <ReviewRow
+                    label="Assignment"
+                    value={
+                      form.assignmentType === "platform_assigned"
+                        ? "Platform matched"
+                        : selectedProvider?.business_name ?? "Provider selected"
+                    }
+                  />
+                </dl>
+
+                <p className="text-xs text-muted-foreground">
+                  Photos can be added after submission from your request details.
+                </p>
+              </section>
             )}
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                {error}
+              </p>
+            )}
 
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
               <Button
                 type="button"
                 variant="outline"
-                size="lg"
                 onClick={prevStep}
-                disabled={step === 0}
+                disabled={stepIndex === 0}
               >
-                <ArrowLeft className="mr-1 h-4 w-4" /> Back
+                <ArrowLeft className="mr-1 h-4 w-4" />
+                Back
               </Button>
-              {step < 2 ? (
-                <Button type="button" size="lg" onClick={nextStep}>
-                  Continue <ArrowRight className="ml-1 h-4 w-4" />
+              {stepIndex < STEPS.length - 1 ? (
+                <Button type="button" onClick={nextStep} disabled={categoriesLoading}>
+                  Continue
+                  <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               ) : (
-                <Button type="submit" size="lg" disabled={submitting || !user || !location}>
+                <Button
+                  type="button"
+                  disabled={submitting || !user}
+                  onClick={() => {
+                    if (!user) {
+                      navigate({
+                        to: "/marketplace/sign-in",
+                        search: { redirect: "/marketplace/request" } as never,
+                      });
+                      return;
+                    }
+                    const check = validateStep("review", form, location);
+                    if (!check.ok || !location) {
+                      setError(check.message ?? "Complete all required fields.");
+                      return;
+                    }
+                    void submitRequest();
+                  }}
+                >
                   {submitting ? (
                     <>
-                      <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Submitting…
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                      Submitting…
                     </>
                   ) : (
                     <>
-                      Submit request <Check className="ml-1 h-4 w-4" />
+                      Submit request
+                      <Check className="ml-1 h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -694,117 +731,156 @@ function RequestPage() {
   );
 }
 
+function validateStep(
+  step: Step,
+  form: RequestForm,
+  location: PickedLocation | null,
+): { ok: boolean; message?: string } {
+  switch (step) {
+    case "job":
+      if (!form.serviceCategoryId) return { ok: false, message: "Select a service category." };
+      if (form.title.trim().length < 3)
+        return { ok: false, message: "Title must be at least 3 characters." };
+      if (form.description.trim().length < 10)
+        return { ok: false, message: "Description must be at least 10 characters." };
+      return { ok: true };
+    case "location":
+      if (!location) return { ok: false, message: "Pin your location on the map." };
+      if (!form.formattedAddress.trim())
+        return { ok: false, message: "Enter a street address." };
+      if (!form.city.trim()) return { ok: false, message: "Enter a city." };
+      return { ok: true };
+    case "contact":
+      if (!form.contactPerson.trim())
+        return { ok: false, message: "Enter a contact person." };
+      if (!form.contactPhone.trim()) return { ok: false, message: "Enter a phone number." };
+      if (!form.contactEmail.trim() || !form.contactEmail.includes("@"))
+        return { ok: false, message: "Enter a valid email address." };
+      return { ok: true };
+    case "review":
+      if (form.assignmentType === "customer_selected" && !form.preferredProviderId)
+        return { ok: false, message: "Select a preferred provider." };
+      return validateStep("job", form, location).ok &&
+        validateStep("location", form, location).ok &&
+        validateStep("contact", form, location).ok
+        ? { ok: true }
+        : { ok: false, message: "Some required fields are missing." };
+    default:
+      return { ok: true };
+  }
+}
+
 function Stepper({
-  step,
-  history,
+  stepIndex,
   onJump,
 }: {
-  step: 0 | 1 | 2;
-  history: RequestStepHistoryEntry[];
-  onJump: (i: number) => void;
+  stepIndex: number;
+  onJump: (index: number) => void;
 }) {
-  const steps = [
-    { label: "Job details", icon: Wrench, key: "job" as const, hint: "What needs fixing" },
-    { label: "Location & photos", icon: MapPin, key: "location" as const, hint: "Where & evidence" },
-    { label: "Review & submit", icon: ClipboardCheck, key: "review" as const, hint: "Confirm & send" },
-  ];
-
-  const visitedIndex = (key: (typeof steps)[number]["key"]) =>
-    history.findIndex((e) => e.step === key);
-
-  // Furthest step reached so far (by stepHistory). 0..2 within the wizard.
-  const furthest = steps.reduce(
-    (max, s, i) => (visitedIndex(s.key) >= 0 ? Math.max(max, i) : max),
-    0,
-  );
-
-  const fmt = (iso: string) =>
-    new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const labels = ["Job", "Location", "Contact", "Review"];
+  const icons = [Wrench, MapPin, Phone, ClipboardCheck];
 
   return (
-    <div className="mt-8">
-      <ol className="relative grid grid-cols-3 gap-3">
-        {/* connector line behind the circles */}
-        <div
-          className="pointer-events-none absolute left-[16.66%] right-[16.66%] top-4 h-0.5 -translate-y-1/2 bg-border"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute left-[16.66%] top-4 h-0.5 -translate-y-1/2 bg-primary transition-all"
-          style={{ width: `${(furthest / 2) * 66.66}%` }}
-          aria-hidden
-        />
-        {steps.map((s, i) => {
-          const Icon = s.icon;
-          const active = step === i;
-          const done = furthest > i;
-          const visited = visitedIndex(s.key) >= 0;
-          const lastSeen = visited ? history.filter((h) => h.step === s.key).at(-1) : undefined;
-          const isLastReached = furthest === i && !active;
-
-          return (
-            <li key={s.label} className="relative flex flex-col items-center text-center">
-              <button
-                type="button"
-                onClick={() => onJump(i)}
-                disabled={!visited}
-                aria-current={active ? "step" : undefined}
-                className={
-                  "relative z-10 flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-semibold transition-colors " +
-                  (active
-                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
-                    : done
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : visited
-                        ? "border-primary/50 bg-background text-primary"
-                        : "border-border bg-background text-muted-foreground") +
-                  (visited ? " cursor-pointer hover:scale-105" : " cursor-not-allowed")
-                }
+    <ol className="mt-5 flex gap-1 sm:gap-2">
+      {labels.map((label, i) => {
+        const Icon = icons[i];
+        const active = stepIndex === i;
+        const done = stepIndex > i;
+        return (
+          <li key={label} className="min-w-0 flex-1">
+            <button
+              type="button"
+              onClick={() => onJump(i)}
+              disabled={i > stepIndex}
+              className={cn(
+                "flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2 text-center transition-colors sm:px-2",
+                active && "bg-primary/10",
+                i > stepIndex && "opacity-40",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded-full text-xs",
+                  done || active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted text-muted-foreground",
+                )}
               >
-                {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-              </button>
-              <div className="mt-2 space-y-0.5">
-                <p
-                  className={
-                    "text-xs font-semibold " +
-                    (active || done ? "text-foreground" : "text-muted-foreground")
-                  }
-                >
-                  {i + 1}. {s.label}
-                </p>
-                <p className="text-[11px] text-muted-foreground">{s.hint}</p>
-                {lastSeen && (
-                  <p className="text-[11px] text-muted-foreground/80">
-                    {active ? "On this step" : `Reached ${fmt(lastSeen.at)}`}
-                  </p>
+                {done ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+              </span>
+              <span
+                className={cn(
+                  "text-[10px] font-medium leading-tight sm:text-xs",
+                  active ? "text-foreground" : "text-muted-foreground",
                 )}
-                {isLastReached && (
-                  <span className="mt-1 inline-block rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-primary">
-                    Last reached
-                  </span>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ol>
+              >
+                {label}
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function SectionHeading({
+  icon: Icon,
+  title,
+  subtitle,
+}: {
+  icon: typeof Wrench;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>}
+      </div>
     </div>
   );
 }
 
-function ReviewRow({
-  label,
-  value,
-  full,
+function AssignmentOption({
+  active,
+  title,
+  body,
+  onClick,
 }: {
-  label: string;
-  value: string;
-  full?: boolean;
+  active: boolean;
+  title: string;
+  body: string;
+  onClick: () => void;
 }) {
   return (
-    <div className={full ? "sm:col-span-2" : undefined}>
-      <dt className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className="mt-1 whitespace-pre-wrap text-sm text-foreground">{value}</dd>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-lg border px-4 py-3 text-left transition-colors",
+        active
+          ? "border-primary bg-primary/5"
+          : "border-border hover:border-primary/40",
+      )}
+    >
+      <p className="text-sm font-semibold text-foreground">{title}</p>
+      <p className="mt-0.5 text-xs text-muted-foreground">{body}</p>
+    </button>
+  );
+}
+
+function ReviewRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid gap-1 px-4 py-3 sm:grid-cols-[120px_1fr]">
+      <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="text-sm text-foreground">{value || "—"}</dd>
     </div>
   );
 }
@@ -813,18 +889,43 @@ function Field({
   label,
   id,
   hint,
+  required,
   children,
 }: {
   label: string;
   id: string;
   hint?: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id}>
+        {label}
+        {required && <span className="text-destructive"> *</span>}
+      </Label>
       {children}
       {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
     </div>
   );
+}
+
+function prettify(value: string) {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function todayInput(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function formatApiTime(value: string): string {
+  if (/^\d{2}:\d{2}:\d{2}$/.test(value)) return value;
+  if (/^\d{2}:\d{2}$/.test(value)) return `${value}:00`;
+  return value;
+}
+
+function formatApiMoney(value: string): string {
+  const n = Number.parseFloat(value);
+  if (!Number.isFinite(n)) return value;
+  return n.toFixed(2);
 }
