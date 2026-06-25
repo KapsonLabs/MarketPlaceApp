@@ -10,20 +10,34 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as ServerErrorRouteImport } from './routes/server-error'
 import { Route as RequestsRouteImport } from './routes/requests'
 import { Route as RequestRouteImport } from './routes/request'
 import { Route as ProvidersRouteImport } from './routes/providers'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as ForProvidersRouteImport } from './routes/for-providers'
 import { Route as BillingRouteImport } from './routes/billing'
-import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as RequestSuccessRouteImport } from './routes/request.success'
 import { Route as ProvidersProviderIdRouteImport } from './routes/providers.$providerId'
+import { Route as AdminShellRouteImport } from './routes/admin._shell'
+import { Route as AdminShellUsersRouteImport } from './routes/admin._shell.users'
+import { Route as AdminShellSettingsRouteImport } from './routes/admin._shell.settings'
+import { Route as AdminShellServiceCategoriesRouteImport } from './routes/admin._shell.service-categories'
+import { Route as AdminShellDashboardRouteImport } from './routes/admin._shell.dashboard'
+import { Route as AdminShellProvidersIndexRouteImport } from './routes/admin._shell.providers.index'
+import { Route as AdminShellRequestsRequestIdRouteImport } from './routes/admin._shell.requests.$requestId'
+import { Route as AdminShellProvidersProviderIdRouteImport } from './routes/admin._shell.providers.$providerId'
 
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
   path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServerErrorRoute = ServerErrorRouteImport.update({
+  id: '/server-error',
+  path: '/server-error',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RequestsRoute = RequestsRouteImport.update({
@@ -56,14 +70,14 @@ const BillingRoute = BillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RequestSuccessRoute = RequestSuccessRouteImport.update({
@@ -76,99 +90,197 @@ const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
   path: '/$providerId',
   getParentRoute: () => ProvidersRoute,
 } as any)
+const AdminShellRoute = AdminShellRouteImport.update({
+  id: '/admin/_shell',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminShellUsersRoute = AdminShellUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellSettingsRoute = AdminShellSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellServiceCategoriesRoute =
+  AdminShellServiceCategoriesRouteImport.update({
+    id: '/service-categories',
+    path: '/service-categories',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
+const AdminShellDashboardRoute = AdminShellDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AdminShellRoute,
+} as any)
+const AdminShellProvidersIndexRoute =
+  AdminShellProvidersIndexRouteImport.update({
+    id: '/providers/',
+    path: '/providers/',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
+const AdminShellRequestsRequestIdRoute =
+  AdminShellRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
+const AdminShellProvidersProviderIdRoute =
+  AdminShellProvidersProviderIdRouteImport.update({
+    id: '/providers/$providerId',
+    path: '/providers/$providerId',
+    getParentRoute: () => AdminShellRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
+  '/server-error': typeof ServerErrorRoute
   '/sign-in': typeof SignInRoute
+  '/admin': typeof AdminShellRouteWithChildren
   '/providers/$providerId': typeof ProvidersProviderIdRoute
   '/request/success': typeof RequestSuccessRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/dashboard': typeof AdminShellDashboardRoute
+  '/admin/service-categories': typeof AdminShellServiceCategoriesRoute
+  '/admin/settings': typeof AdminShellSettingsRoute
+  '/admin/users': typeof AdminShellUsersRoute
+  '/admin/providers/$providerId': typeof AdminShellProvidersProviderIdRoute
+  '/admin/requests/$requestId': typeof AdminShellRequestsRequestIdRoute
+  '/admin/providers/': typeof AdminShellProvidersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
+  '/server-error': typeof ServerErrorRoute
   '/sign-in': typeof SignInRoute
+  '/admin': typeof AdminIndexRoute
   '/providers/$providerId': typeof ProvidersProviderIdRoute
   '/request/success': typeof RequestSuccessRoute
+  '/admin/dashboard': typeof AdminShellDashboardRoute
+  '/admin/service-categories': typeof AdminShellServiceCategoriesRoute
+  '/admin/settings': typeof AdminShellSettingsRoute
+  '/admin/users': typeof AdminShellUsersRoute
+  '/admin/providers/$providerId': typeof AdminShellProvidersProviderIdRoute
+  '/admin/requests/$requestId': typeof AdminShellRequestsRequestIdRoute
+  '/admin/providers': typeof AdminShellProvidersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/billing': typeof BillingRoute
   '/for-providers': typeof ForProvidersRoute
   '/how-it-works': typeof HowItWorksRoute
   '/providers': typeof ProvidersRouteWithChildren
   '/request': typeof RequestRouteWithChildren
   '/requests': typeof RequestsRoute
+  '/server-error': typeof ServerErrorRoute
   '/sign-in': typeof SignInRoute
+  '/admin/_shell': typeof AdminShellRouteWithChildren
   '/providers/$providerId': typeof ProvidersProviderIdRoute
   '/request/success': typeof RequestSuccessRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/_shell/dashboard': typeof AdminShellDashboardRoute
+  '/admin/_shell/service-categories': typeof AdminShellServiceCategoriesRoute
+  '/admin/_shell/settings': typeof AdminShellSettingsRoute
+  '/admin/_shell/users': typeof AdminShellUsersRoute
+  '/admin/_shell/providers/$providerId': typeof AdminShellProvidersProviderIdRoute
+  '/admin/_shell/requests/$requestId': typeof AdminShellRequestsRequestIdRoute
+  '/admin/_shell/providers/': typeof AdminShellProvidersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
     | '/billing'
     | '/for-providers'
     | '/how-it-works'
     | '/providers'
     | '/request'
     | '/requests'
+    | '/server-error'
     | '/sign-in'
+    | '/admin'
     | '/providers/$providerId'
     | '/request/success'
+    | '/admin/'
+    | '/admin/dashboard'
+    | '/admin/service-categories'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/admin/providers/$providerId'
+    | '/admin/requests/$requestId'
+    | '/admin/providers/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/billing'
     | '/for-providers'
     | '/how-it-works'
     | '/providers'
     | '/request'
     | '/requests'
+    | '/server-error'
     | '/sign-in'
+    | '/admin'
     | '/providers/$providerId'
     | '/request/success'
+    | '/admin/dashboard'
+    | '/admin/service-categories'
+    | '/admin/settings'
+    | '/admin/users'
+    | '/admin/providers/$providerId'
+    | '/admin/requests/$requestId'
+    | '/admin/providers'
   id:
     | '__root__'
     | '/'
-    | '/admin'
     | '/billing'
     | '/for-providers'
     | '/how-it-works'
     | '/providers'
     | '/request'
     | '/requests'
+    | '/server-error'
     | '/sign-in'
+    | '/admin/_shell'
     | '/providers/$providerId'
     | '/request/success'
+    | '/admin/'
+    | '/admin/_shell/dashboard'
+    | '/admin/_shell/service-categories'
+    | '/admin/_shell/settings'
+    | '/admin/_shell/users'
+    | '/admin/_shell/providers/$providerId'
+    | '/admin/_shell/requests/$requestId'
+    | '/admin/_shell/providers/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
   BillingRoute: typeof BillingRoute
   ForProvidersRoute: typeof ForProvidersRoute
   HowItWorksRoute: typeof HowItWorksRoute
   ProvidersRoute: typeof ProvidersRouteWithChildren
   RequestRoute: typeof RequestRouteWithChildren
   RequestsRoute: typeof RequestsRoute
+  ServerErrorRoute: typeof ServerErrorRoute
   SignInRoute: typeof SignInRoute
+  AdminShellRoute: typeof AdminShellRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -178,6 +290,13 @@ declare module '@tanstack/react-router' {
       path: '/sign-in'
       fullPath: '/sign-in'
       preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/server-error': {
+      id: '/server-error'
+      path: '/server-error'
+      fullPath: '/server-error'
+      preLoaderRoute: typeof ServerErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/requests': {
@@ -222,18 +341,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BillingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/request/success': {
@@ -249,6 +368,62 @@ declare module '@tanstack/react-router' {
       fullPath: '/providers/$providerId'
       preLoaderRoute: typeof ProvidersProviderIdRouteImport
       parentRoute: typeof ProvidersRoute
+    }
+    '/admin/_shell': {
+      id: '/admin/_shell'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/_shell/users': {
+      id: '/admin/_shell/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminShellUsersRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/settings': {
+      id: '/admin/_shell/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminShellSettingsRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/service-categories': {
+      id: '/admin/_shell/service-categories'
+      path: '/service-categories'
+      fullPath: '/admin/service-categories'
+      preLoaderRoute: typeof AdminShellServiceCategoriesRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/dashboard': {
+      id: '/admin/_shell/dashboard'
+      path: '/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminShellDashboardRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/providers/': {
+      id: '/admin/_shell/providers/'
+      path: '/providers'
+      fullPath: '/admin/providers/'
+      preLoaderRoute: typeof AdminShellProvidersIndexRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/requests/$requestId': {
+      id: '/admin/_shell/requests/$requestId'
+      path: '/requests/$requestId'
+      fullPath: '/admin/requests/$requestId'
+      preLoaderRoute: typeof AdminShellRequestsRequestIdRouteImport
+      parentRoute: typeof AdminShellRoute
+    }
+    '/admin/_shell/providers/$providerId': {
+      id: '/admin/_shell/providers/$providerId'
+      path: '/providers/$providerId'
+      fullPath: '/admin/providers/$providerId'
+      preLoaderRoute: typeof AdminShellProvidersProviderIdRouteImport
+      parentRoute: typeof AdminShellRoute
     }
   }
 }
@@ -276,17 +451,52 @@ const RequestRouteChildren: RequestRouteChildren = {
 const RequestRouteWithChildren =
   RequestRoute._addFileChildren(RequestRouteChildren)
 
+interface AdminShellRouteChildren {
+  AdminShellDashboardRoute: typeof AdminShellDashboardRoute
+  AdminShellServiceCategoriesRoute: typeof AdminShellServiceCategoriesRoute
+  AdminShellSettingsRoute: typeof AdminShellSettingsRoute
+  AdminShellUsersRoute: typeof AdminShellUsersRoute
+  AdminShellProvidersProviderIdRoute: typeof AdminShellProvidersProviderIdRoute
+  AdminShellRequestsRequestIdRoute: typeof AdminShellRequestsRequestIdRoute
+  AdminShellProvidersIndexRoute: typeof AdminShellProvidersIndexRoute
+}
+
+const AdminShellRouteChildren: AdminShellRouteChildren = {
+  AdminShellDashboardRoute: AdminShellDashboardRoute,
+  AdminShellServiceCategoriesRoute: AdminShellServiceCategoriesRoute,
+  AdminShellSettingsRoute: AdminShellSettingsRoute,
+  AdminShellUsersRoute: AdminShellUsersRoute,
+  AdminShellProvidersProviderIdRoute: AdminShellProvidersProviderIdRoute,
+  AdminShellRequestsRequestIdRoute: AdminShellRequestsRequestIdRoute,
+  AdminShellProvidersIndexRoute: AdminShellProvidersIndexRoute,
+}
+
+const AdminShellRouteWithChildren = AdminShellRoute._addFileChildren(
+  AdminShellRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
   BillingRoute: BillingRoute,
   ForProvidersRoute: ForProvidersRoute,
   HowItWorksRoute: HowItWorksRoute,
   ProvidersRoute: ProvidersRouteWithChildren,
   RequestRoute: RequestRouteWithChildren,
   RequestsRoute: RequestsRoute,
+  ServerErrorRoute: ServerErrorRoute,
   SignInRoute: SignInRoute,
+  AdminShellRoute: AdminShellRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

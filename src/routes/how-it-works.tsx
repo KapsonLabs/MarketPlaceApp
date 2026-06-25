@@ -33,7 +33,7 @@ const flow = [
   {
     icon: ClipboardList,
     title: "3. Triaged in admin",
-    body: "Marketplace admins see the request at /admin and a property manager sees it at /maintenance in Unit & Tenant Views.",
+    body: "Marketplace admins see the request at /admin/dashboard and a property manager sees it at /maintenance in Unit & Tenant Views.",
   },
   {
     icon: Wrench,
@@ -156,7 +156,7 @@ function HowItWorks() {
               <Link to="/request">Submit a request</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/admin">Open admin dashboard</Link>
+              <Link to="/admin/dashboard">Open admin dashboard</Link>
             </Button>
           </div>
         </section>
