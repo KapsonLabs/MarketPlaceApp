@@ -9,65 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as ServerErrorRouteImport } from './routes/server-error'
-import { Route as RequestsRouteImport } from './routes/requests'
-import { Route as RequestRouteImport } from './routes/request'
-import { Route as ProvidersRouteImport } from './routes/providers'
-import { Route as HowItWorksRouteImport } from './routes/how-it-works'
-import { Route as ForProvidersRouteImport } from './routes/for-providers'
-import { Route as BillingRouteImport } from './routes/billing'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminIndexRouteImport } from './routes/admin.index'
-import { Route as RequestSuccessRouteImport } from './routes/request.success'
-import { Route as ProvidersProviderIdRouteImport } from './routes/providers.$providerId'
-import { Route as AdminShellRouteImport } from './routes/admin._shell'
-import { Route as AdminShellUsersRouteImport } from './routes/admin._shell.users'
-import { Route as AdminShellSettingsRouteImport } from './routes/admin._shell.settings'
-import { Route as AdminShellServiceCategoriesRouteImport } from './routes/admin._shell.service-categories'
-import { Route as AdminShellDashboardRouteImport } from './routes/admin._shell.dashboard'
-import { Route as AdminShellProvidersIndexRouteImport } from './routes/admin._shell.providers.index'
-import { Route as AdminShellRequestsRequestIdRouteImport } from './routes/admin._shell.requests.$requestId'
-import { Route as AdminShellProvidersProviderIdRouteImport } from './routes/admin._shell.providers.$providerId'
+import { Route as MarketplaceIndexRouteImport } from './routes/marketplace/index'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as MarketplaceSignInRouteImport } from './routes/marketplace/sign-in'
+import { Route as MarketplaceRequestsRouteImport } from './routes/marketplace/requests'
+import { Route as MarketplaceRequestRouteImport } from './routes/marketplace/request'
+import { Route as MarketplaceProvidersRouteImport } from './routes/marketplace/providers'
+import { Route as MarketplaceHowItWorksRouteImport } from './routes/marketplace/how-it-works'
+import { Route as MarketplaceForProvidersRouteImport } from './routes/marketplace/for-providers'
+import { Route as MarketplaceBillingRouteImport } from './routes/marketplace/billing'
+import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminTasksIndexRouteImport } from './routes/admin/tasks.index'
+import { Route as AdminRequestsIndexRouteImport } from './routes/admin/requests.index'
+import { Route as AdminProvidersIndexRouteImport } from './routes/admin/providers.index'
+import { Route as AdminPaymentsIndexRouteImport } from './routes/admin/payments.index'
+import { Route as MarketplaceRequestSuccessRouteImport } from './routes/marketplace/request.success'
+import { Route as MarketplaceProvidersProviderIdRouteImport } from './routes/marketplace/providers.$providerId'
+import { Route as AdminTasksTaskIdRouteImport } from './routes/admin/tasks.$taskId'
+import { Route as AdminRequestsRequestIdRouteImport } from './routes/admin/requests.$requestId'
+import { Route as AdminProvidersProviderIdRouteImport } from './routes/admin/providers.$providerId'
+import { Route as AdminPaymentsPaymentIdRouteImport } from './routes/admin/payments.$paymentId'
 
-const SignInRoute = SignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ServerErrorRoute = ServerErrorRouteImport.update({
   id: '/server-error',
   path: '/server-error',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RequestsRoute = RequestsRouteImport.update({
-  id: '/requests',
-  path: '/requests',
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RequestRoute = RequestRouteImport.update({
-  id: '/request',
-  path: '/request',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProvidersRoute = ProvidersRouteImport.update({
-  id: '/providers',
-  path: '/providers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HowItWorksRoute = HowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ForProvidersRoute = ForProvidersRouteImport.update({
-  id: '/for-providers',
-  path: '/for-providers',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BillingRoute = BillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -75,223 +54,275 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => MarketplaceRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
-  id: '/admin/',
-  path: '/admin/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
 } as any)
-const RequestSuccessRoute = RequestSuccessRouteImport.update({
-  id: '/success',
-  path: '/success',
-  getParentRoute: () => RequestRoute,
+const MarketplaceSignInRoute = MarketplaceSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => MarketplaceRoute,
 } as any)
-const ProvidersProviderIdRoute = ProvidersProviderIdRouteImport.update({
-  id: '/$providerId',
-  path: '/$providerId',
-  getParentRoute: () => ProvidersRoute,
+const MarketplaceRequestsRoute = MarketplaceRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => MarketplaceRoute,
 } as any)
-const AdminShellRoute = AdminShellRouteImport.update({
-  id: '/admin/_shell',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
+const MarketplaceRequestRoute = MarketplaceRequestRouteImport.update({
+  id: '/request',
+  path: '/request',
+  getParentRoute: () => MarketplaceRoute,
 } as any)
-const AdminShellUsersRoute = AdminShellUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AdminShellRoute,
+const MarketplaceProvidersRoute = MarketplaceProvidersRouteImport.update({
+  id: '/providers',
+  path: '/providers',
+  getParentRoute: () => MarketplaceRoute,
 } as any)
-const AdminShellSettingsRoute = AdminShellSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AdminShellRoute,
+const MarketplaceHowItWorksRoute = MarketplaceHowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => MarketplaceRoute,
 } as any)
-const AdminShellServiceCategoriesRoute =
-  AdminShellServiceCategoriesRouteImport.update({
-    id: '/service-categories',
-    path: '/service-categories',
-    getParentRoute: () => AdminShellRoute,
+const MarketplaceForProvidersRoute = MarketplaceForProvidersRouteImport.update({
+  id: '/for-providers',
+  path: '/for-providers',
+  getParentRoute: () => MarketplaceRoute,
+} as any)
+const MarketplaceBillingRoute = MarketplaceBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => MarketplaceRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminTasksIndexRoute = AdminTasksIndexRouteImport.update({
+  id: '/tasks/',
+  path: '/tasks/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRequestsIndexRoute = AdminRequestsIndexRouteImport.update({
+  id: '/requests/',
+  path: '/requests/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProvidersIndexRoute = AdminProvidersIndexRouteImport.update({
+  id: '/providers/',
+  path: '/providers/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminPaymentsIndexRoute = AdminPaymentsIndexRouteImport.update({
+  id: '/payments/',
+  path: '/payments/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const MarketplaceRequestSuccessRoute =
+  MarketplaceRequestSuccessRouteImport.update({
+    id: '/success',
+    path: '/success',
+    getParentRoute: () => MarketplaceRequestRoute,
   } as any)
-const AdminShellDashboardRoute = AdminShellDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AdminShellRoute,
+const MarketplaceProvidersProviderIdRoute =
+  MarketplaceProvidersProviderIdRouteImport.update({
+    id: '/$providerId',
+    path: '/$providerId',
+    getParentRoute: () => MarketplaceProvidersRoute,
+  } as any)
+const AdminTasksTaskIdRoute = AdminTasksTaskIdRouteImport.update({
+  id: '/tasks/$taskId',
+  path: '/tasks/$taskId',
+  getParentRoute: () => AdminRoute,
 } as any)
-const AdminShellProvidersIndexRoute =
-  AdminShellProvidersIndexRouteImport.update({
-    id: '/providers/',
-    path: '/providers/',
-    getParentRoute: () => AdminShellRoute,
-  } as any)
-const AdminShellRequestsRequestIdRoute =
-  AdminShellRequestsRequestIdRouteImport.update({
-    id: '/requests/$requestId',
-    path: '/requests/$requestId',
-    getParentRoute: () => AdminShellRoute,
-  } as any)
-const AdminShellProvidersProviderIdRoute =
-  AdminShellProvidersProviderIdRouteImport.update({
+const AdminRequestsRequestIdRoute = AdminRequestsRequestIdRouteImport.update({
+  id: '/requests/$requestId',
+  path: '/requests/$requestId',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProvidersProviderIdRoute =
+  AdminProvidersProviderIdRouteImport.update({
     id: '/providers/$providerId',
     path: '/providers/$providerId',
-    getParentRoute: () => AdminShellRoute,
+    getParentRoute: () => AdminRoute,
   } as any)
+const AdminPaymentsPaymentIdRoute = AdminPaymentsPaymentIdRouteImport.update({
+  id: '/payments/$paymentId',
+  path: '/payments/$paymentId',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/billing': typeof BillingRoute
-  '/for-providers': typeof ForProvidersRoute
-  '/how-it-works': typeof HowItWorksRoute
-  '/providers': typeof ProvidersRouteWithChildren
-  '/request': typeof RequestRouteWithChildren
-  '/requests': typeof RequestsRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/marketplace': typeof MarketplaceRouteWithChildren
   '/server-error': typeof ServerErrorRoute
-  '/sign-in': typeof SignInRoute
-  '/admin': typeof AdminShellRouteWithChildren
-  '/providers/$providerId': typeof ProvidersProviderIdRoute
-  '/request/success': typeof RequestSuccessRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/marketplace/billing': typeof MarketplaceBillingRoute
+  '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
+  '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
+  '/marketplace/providers': typeof MarketplaceProvidersRouteWithChildren
+  '/marketplace/request': typeof MarketplaceRequestRouteWithChildren
+  '/marketplace/requests': typeof MarketplaceRequestsRoute
+  '/marketplace/sign-in': typeof MarketplaceSignInRoute
   '/admin/': typeof AdminIndexRoute
-  '/admin/dashboard': typeof AdminShellDashboardRoute
-  '/admin/service-categories': typeof AdminShellServiceCategoriesRoute
-  '/admin/settings': typeof AdminShellSettingsRoute
-  '/admin/users': typeof AdminShellUsersRoute
-  '/admin/providers/$providerId': typeof AdminShellProvidersProviderIdRoute
-  '/admin/requests/$requestId': typeof AdminShellRequestsRequestIdRoute
-  '/admin/providers/': typeof AdminShellProvidersIndexRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
+  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
+  '/admin/providers/$providerId': typeof AdminProvidersProviderIdRoute
+  '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
+  '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
+  '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
+  '/marketplace/request/success': typeof MarketplaceRequestSuccessRoute
+  '/admin/payments/': typeof AdminPaymentsIndexRoute
+  '/admin/providers/': typeof AdminProvidersIndexRoute
+  '/admin/requests/': typeof AdminRequestsIndexRoute
+  '/admin/tasks/': typeof AdminTasksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/billing': typeof BillingRoute
-  '/for-providers': typeof ForProvidersRoute
-  '/how-it-works': typeof HowItWorksRoute
-  '/providers': typeof ProvidersRouteWithChildren
-  '/request': typeof RequestRouteWithChildren
-  '/requests': typeof RequestsRoute
   '/server-error': typeof ServerErrorRoute
-  '/sign-in': typeof SignInRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/marketplace/billing': typeof MarketplaceBillingRoute
+  '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
+  '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
+  '/marketplace/providers': typeof MarketplaceProvidersRouteWithChildren
+  '/marketplace/request': typeof MarketplaceRequestRouteWithChildren
+  '/marketplace/requests': typeof MarketplaceRequestsRoute
+  '/marketplace/sign-in': typeof MarketplaceSignInRoute
   '/admin': typeof AdminIndexRoute
-  '/providers/$providerId': typeof ProvidersProviderIdRoute
-  '/request/success': typeof RequestSuccessRoute
-  '/admin/dashboard': typeof AdminShellDashboardRoute
-  '/admin/service-categories': typeof AdminShellServiceCategoriesRoute
-  '/admin/settings': typeof AdminShellSettingsRoute
-  '/admin/users': typeof AdminShellUsersRoute
-  '/admin/providers/$providerId': typeof AdminShellProvidersProviderIdRoute
-  '/admin/requests/$requestId': typeof AdminShellRequestsRequestIdRoute
-  '/admin/providers': typeof AdminShellProvidersIndexRoute
+  '/marketplace': typeof MarketplaceIndexRoute
+  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
+  '/admin/providers/$providerId': typeof AdminProvidersProviderIdRoute
+  '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
+  '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
+  '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
+  '/marketplace/request/success': typeof MarketplaceRequestSuccessRoute
+  '/admin/payments': typeof AdminPaymentsIndexRoute
+  '/admin/providers': typeof AdminProvidersIndexRoute
+  '/admin/requests': typeof AdminRequestsIndexRoute
+  '/admin/tasks': typeof AdminTasksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/billing': typeof BillingRoute
-  '/for-providers': typeof ForProvidersRoute
-  '/how-it-works': typeof HowItWorksRoute
-  '/providers': typeof ProvidersRouteWithChildren
-  '/request': typeof RequestRouteWithChildren
-  '/requests': typeof RequestsRoute
+  '/admin': typeof AdminRouteWithChildren
+  '/marketplace': typeof MarketplaceRouteWithChildren
   '/server-error': typeof ServerErrorRoute
-  '/sign-in': typeof SignInRoute
-  '/admin/_shell': typeof AdminShellRouteWithChildren
-  '/providers/$providerId': typeof ProvidersProviderIdRoute
-  '/request/success': typeof RequestSuccessRoute
+  '/admin/login': typeof AdminLoginRoute
+  '/marketplace/billing': typeof MarketplaceBillingRoute
+  '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
+  '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
+  '/marketplace/providers': typeof MarketplaceProvidersRouteWithChildren
+  '/marketplace/request': typeof MarketplaceRequestRouteWithChildren
+  '/marketplace/requests': typeof MarketplaceRequestsRoute
+  '/marketplace/sign-in': typeof MarketplaceSignInRoute
   '/admin/': typeof AdminIndexRoute
-  '/admin/_shell/dashboard': typeof AdminShellDashboardRoute
-  '/admin/_shell/service-categories': typeof AdminShellServiceCategoriesRoute
-  '/admin/_shell/settings': typeof AdminShellSettingsRoute
-  '/admin/_shell/users': typeof AdminShellUsersRoute
-  '/admin/_shell/providers/$providerId': typeof AdminShellProvidersProviderIdRoute
-  '/admin/_shell/requests/$requestId': typeof AdminShellRequestsRequestIdRoute
-  '/admin/_shell/providers/': typeof AdminShellProvidersIndexRoute
+  '/marketplace/': typeof MarketplaceIndexRoute
+  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
+  '/admin/providers/$providerId': typeof AdminProvidersProviderIdRoute
+  '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
+  '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
+  '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
+  '/marketplace/request/success': typeof MarketplaceRequestSuccessRoute
+  '/admin/payments/': typeof AdminPaymentsIndexRoute
+  '/admin/providers/': typeof AdminProvidersIndexRoute
+  '/admin/requests/': typeof AdminRequestsIndexRoute
+  '/admin/tasks/': typeof AdminTasksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/billing'
-    | '/for-providers'
-    | '/how-it-works'
-    | '/providers'
-    | '/request'
-    | '/requests'
-    | '/server-error'
-    | '/sign-in'
     | '/admin'
-    | '/providers/$providerId'
-    | '/request/success'
+    | '/marketplace'
+    | '/server-error'
+    | '/admin/login'
+    | '/marketplace/billing'
+    | '/marketplace/for-providers'
+    | '/marketplace/how-it-works'
+    | '/marketplace/providers'
+    | '/marketplace/request'
+    | '/marketplace/requests'
+    | '/marketplace/sign-in'
     | '/admin/'
-    | '/admin/dashboard'
-    | '/admin/service-categories'
-    | '/admin/settings'
-    | '/admin/users'
+    | '/marketplace/'
+    | '/admin/payments/$paymentId'
     | '/admin/providers/$providerId'
     | '/admin/requests/$requestId'
+    | '/admin/tasks/$taskId'
+    | '/marketplace/providers/$providerId'
+    | '/marketplace/request/success'
+    | '/admin/payments/'
     | '/admin/providers/'
+    | '/admin/requests/'
+    | '/admin/tasks/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/billing'
-    | '/for-providers'
-    | '/how-it-works'
-    | '/providers'
-    | '/request'
-    | '/requests'
     | '/server-error'
-    | '/sign-in'
+    | '/admin/login'
+    | '/marketplace/billing'
+    | '/marketplace/for-providers'
+    | '/marketplace/how-it-works'
+    | '/marketplace/providers'
+    | '/marketplace/request'
+    | '/marketplace/requests'
+    | '/marketplace/sign-in'
     | '/admin'
-    | '/providers/$providerId'
-    | '/request/success'
-    | '/admin/dashboard'
-    | '/admin/service-categories'
-    | '/admin/settings'
-    | '/admin/users'
+    | '/marketplace'
+    | '/admin/payments/$paymentId'
     | '/admin/providers/$providerId'
     | '/admin/requests/$requestId'
+    | '/admin/tasks/$taskId'
+    | '/marketplace/providers/$providerId'
+    | '/marketplace/request/success'
+    | '/admin/payments'
     | '/admin/providers'
+    | '/admin/requests'
+    | '/admin/tasks'
   id:
     | '__root__'
     | '/'
-    | '/billing'
-    | '/for-providers'
-    | '/how-it-works'
-    | '/providers'
-    | '/request'
-    | '/requests'
+    | '/admin'
+    | '/marketplace'
     | '/server-error'
-    | '/sign-in'
-    | '/admin/_shell'
-    | '/providers/$providerId'
-    | '/request/success'
+    | '/admin/login'
+    | '/marketplace/billing'
+    | '/marketplace/for-providers'
+    | '/marketplace/how-it-works'
+    | '/marketplace/providers'
+    | '/marketplace/request'
+    | '/marketplace/requests'
+    | '/marketplace/sign-in'
     | '/admin/'
-    | '/admin/_shell/dashboard'
-    | '/admin/_shell/service-categories'
-    | '/admin/_shell/settings'
-    | '/admin/_shell/users'
-    | '/admin/_shell/providers/$providerId'
-    | '/admin/_shell/requests/$requestId'
-    | '/admin/_shell/providers/'
+    | '/marketplace/'
+    | '/admin/payments/$paymentId'
+    | '/admin/providers/$providerId'
+    | '/admin/requests/$requestId'
+    | '/admin/tasks/$taskId'
+    | '/marketplace/providers/$providerId'
+    | '/marketplace/request/success'
+    | '/admin/payments/'
+    | '/admin/providers/'
+    | '/admin/requests/'
+    | '/admin/tasks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BillingRoute: typeof BillingRoute
-  ForProvidersRoute: typeof ForProvidersRoute
-  HowItWorksRoute: typeof HowItWorksRoute
-  ProvidersRoute: typeof ProvidersRouteWithChildren
-  RequestRoute: typeof RequestRouteWithChildren
-  RequestsRoute: typeof RequestsRoute
+  AdminRoute: typeof AdminRouteWithChildren
+  MarketplaceRoute: typeof MarketplaceRouteWithChildren
   ServerErrorRoute: typeof ServerErrorRoute
-  SignInRoute: typeof SignInRoute
-  AdminShellRoute: typeof AdminShellRouteWithChildren
-  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/server-error': {
       id: '/server-error'
       path: '/server-error'
@@ -299,46 +330,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServerErrorRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/requests': {
-      id: '/requests'
-      path: '/requests'
-      fullPath: '/requests'
-      preLoaderRoute: typeof RequestsRouteImport
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/request': {
-      id: '/request'
-      path: '/request'
-      fullPath: '/request'
-      preLoaderRoute: typeof RequestRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/providers': {
-      id: '/providers'
-      path: '/providers'
-      fullPath: '/providers'
-      preLoaderRoute: typeof ProvidersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-it-works': {
-      id: '/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof HowItWorksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/for-providers': {
-      id: '/for-providers'
-      path: '/for-providers'
-      fullPath: '/for-providers'
-      preLoaderRoute: typeof ForProvidersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/billing': {
-      id: '/billing'
-      path: '/billing'
-      fullPath: '/billing'
-      preLoaderRoute: typeof BillingRouteImport
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -348,155 +351,241 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/marketplace/': {
+      id: '/marketplace/'
+      path: '/'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof MarketplaceIndexRouteImport
+      parentRoute: typeof MarketplaceRoute
+    }
     '/admin/': {
       id: '/admin/'
-      path: '/admin'
+      path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/request/success': {
-      id: '/request/success'
-      path: '/success'
-      fullPath: '/request/success'
-      preLoaderRoute: typeof RequestSuccessRouteImport
-      parentRoute: typeof RequestRoute
+    '/marketplace/sign-in': {
+      id: '/marketplace/sign-in'
+      path: '/sign-in'
+      fullPath: '/marketplace/sign-in'
+      preLoaderRoute: typeof MarketplaceSignInRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/providers/$providerId': {
-      id: '/providers/$providerId'
-      path: '/$providerId'
-      fullPath: '/providers/$providerId'
-      preLoaderRoute: typeof ProvidersProviderIdRouteImport
-      parentRoute: typeof ProvidersRoute
+    '/marketplace/requests': {
+      id: '/marketplace/requests'
+      path: '/requests'
+      fullPath: '/marketplace/requests'
+      preLoaderRoute: typeof MarketplaceRequestsRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/admin/_shell': {
-      id: '/admin/_shell'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminShellRouteImport
-      parentRoute: typeof rootRouteImport
+    '/marketplace/request': {
+      id: '/marketplace/request'
+      path: '/request'
+      fullPath: '/marketplace/request'
+      preLoaderRoute: typeof MarketplaceRequestRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/admin/_shell/users': {
-      id: '/admin/_shell/users'
-      path: '/users'
-      fullPath: '/admin/users'
-      preLoaderRoute: typeof AdminShellUsersRouteImport
-      parentRoute: typeof AdminShellRoute
+    '/marketplace/providers': {
+      id: '/marketplace/providers'
+      path: '/providers'
+      fullPath: '/marketplace/providers'
+      preLoaderRoute: typeof MarketplaceProvidersRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/admin/_shell/settings': {
-      id: '/admin/_shell/settings'
-      path: '/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminShellSettingsRouteImport
-      parentRoute: typeof AdminShellRoute
+    '/marketplace/how-it-works': {
+      id: '/marketplace/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/marketplace/how-it-works'
+      preLoaderRoute: typeof MarketplaceHowItWorksRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/admin/_shell/service-categories': {
-      id: '/admin/_shell/service-categories'
-      path: '/service-categories'
-      fullPath: '/admin/service-categories'
-      preLoaderRoute: typeof AdminShellServiceCategoriesRouteImport
-      parentRoute: typeof AdminShellRoute
+    '/marketplace/for-providers': {
+      id: '/marketplace/for-providers'
+      path: '/for-providers'
+      fullPath: '/marketplace/for-providers'
+      preLoaderRoute: typeof MarketplaceForProvidersRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/admin/_shell/dashboard': {
-      id: '/admin/_shell/dashboard'
-      path: '/dashboard'
-      fullPath: '/admin/dashboard'
-      preLoaderRoute: typeof AdminShellDashboardRouteImport
-      parentRoute: typeof AdminShellRoute
+    '/marketplace/billing': {
+      id: '/marketplace/billing'
+      path: '/billing'
+      fullPath: '/marketplace/billing'
+      preLoaderRoute: typeof MarketplaceBillingRouteImport
+      parentRoute: typeof MarketplaceRoute
     }
-    '/admin/_shell/providers/': {
-      id: '/admin/_shell/providers/'
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/tasks/': {
+      id: '/admin/tasks/'
+      path: '/tasks'
+      fullPath: '/admin/tasks/'
+      preLoaderRoute: typeof AdminTasksIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/requests/': {
+      id: '/admin/requests/'
+      path: '/requests'
+      fullPath: '/admin/requests/'
+      preLoaderRoute: typeof AdminRequestsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/providers/': {
+      id: '/admin/providers/'
       path: '/providers'
       fullPath: '/admin/providers/'
-      preLoaderRoute: typeof AdminShellProvidersIndexRouteImport
-      parentRoute: typeof AdminShellRoute
+      preLoaderRoute: typeof AdminProvidersIndexRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/admin/_shell/requests/$requestId': {
-      id: '/admin/_shell/requests/$requestId'
+    '/admin/payments/': {
+      id: '/admin/payments/'
+      path: '/payments'
+      fullPath: '/admin/payments/'
+      preLoaderRoute: typeof AdminPaymentsIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/marketplace/request/success': {
+      id: '/marketplace/request/success'
+      path: '/success'
+      fullPath: '/marketplace/request/success'
+      preLoaderRoute: typeof MarketplaceRequestSuccessRouteImport
+      parentRoute: typeof MarketplaceRequestRoute
+    }
+    '/marketplace/providers/$providerId': {
+      id: '/marketplace/providers/$providerId'
+      path: '/$providerId'
+      fullPath: '/marketplace/providers/$providerId'
+      preLoaderRoute: typeof MarketplaceProvidersProviderIdRouteImport
+      parentRoute: typeof MarketplaceProvidersRoute
+    }
+    '/admin/tasks/$taskId': {
+      id: '/admin/tasks/$taskId'
+      path: '/tasks/$taskId'
+      fullPath: '/admin/tasks/$taskId'
+      preLoaderRoute: typeof AdminTasksTaskIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/requests/$requestId': {
+      id: '/admin/requests/$requestId'
       path: '/requests/$requestId'
       fullPath: '/admin/requests/$requestId'
-      preLoaderRoute: typeof AdminShellRequestsRequestIdRouteImport
-      parentRoute: typeof AdminShellRoute
+      preLoaderRoute: typeof AdminRequestsRequestIdRouteImport
+      parentRoute: typeof AdminRoute
     }
-    '/admin/_shell/providers/$providerId': {
-      id: '/admin/_shell/providers/$providerId'
+    '/admin/providers/$providerId': {
+      id: '/admin/providers/$providerId'
       path: '/providers/$providerId'
       fullPath: '/admin/providers/$providerId'
-      preLoaderRoute: typeof AdminShellProvidersProviderIdRouteImport
-      parentRoute: typeof AdminShellRoute
+      preLoaderRoute: typeof AdminProvidersProviderIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/payments/$paymentId': {
+      id: '/admin/payments/$paymentId'
+      path: '/payments/$paymentId'
+      fullPath: '/admin/payments/$paymentId'
+      preLoaderRoute: typeof AdminPaymentsPaymentIdRouteImport
+      parentRoute: typeof AdminRoute
     }
   }
 }
 
-interface ProvidersRouteChildren {
-  ProvidersProviderIdRoute: typeof ProvidersProviderIdRoute
+interface AdminRouteChildren {
+  AdminLoginRoute: typeof AdminLoginRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminPaymentsPaymentIdRoute: typeof AdminPaymentsPaymentIdRoute
+  AdminProvidersProviderIdRoute: typeof AdminProvidersProviderIdRoute
+  AdminRequestsRequestIdRoute: typeof AdminRequestsRequestIdRoute
+  AdminTasksTaskIdRoute: typeof AdminTasksTaskIdRoute
+  AdminPaymentsIndexRoute: typeof AdminPaymentsIndexRoute
+  AdminProvidersIndexRoute: typeof AdminProvidersIndexRoute
+  AdminRequestsIndexRoute: typeof AdminRequestsIndexRoute
+  AdminTasksIndexRoute: typeof AdminTasksIndexRoute
 }
 
-const ProvidersRouteChildren: ProvidersRouteChildren = {
-  ProvidersProviderIdRoute: ProvidersProviderIdRoute,
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminLoginRoute: AdminLoginRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminPaymentsPaymentIdRoute: AdminPaymentsPaymentIdRoute,
+  AdminProvidersProviderIdRoute: AdminProvidersProviderIdRoute,
+  AdminRequestsRequestIdRoute: AdminRequestsRequestIdRoute,
+  AdminTasksTaskIdRoute: AdminTasksTaskIdRoute,
+  AdminPaymentsIndexRoute: AdminPaymentsIndexRoute,
+  AdminProvidersIndexRoute: AdminProvidersIndexRoute,
+  AdminRequestsIndexRoute: AdminRequestsIndexRoute,
+  AdminTasksIndexRoute: AdminTasksIndexRoute,
 }
 
-const ProvidersRouteWithChildren = ProvidersRoute._addFileChildren(
-  ProvidersRouteChildren,
-)
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
-interface RequestRouteChildren {
-  RequestSuccessRoute: typeof RequestSuccessRoute
+interface MarketplaceProvidersRouteChildren {
+  MarketplaceProvidersProviderIdRoute: typeof MarketplaceProvidersProviderIdRoute
 }
 
-const RequestRouteChildren: RequestRouteChildren = {
-  RequestSuccessRoute: RequestSuccessRoute,
+const MarketplaceProvidersRouteChildren: MarketplaceProvidersRouteChildren = {
+  MarketplaceProvidersProviderIdRoute: MarketplaceProvidersProviderIdRoute,
 }
 
-const RequestRouteWithChildren =
-  RequestRoute._addFileChildren(RequestRouteChildren)
+const MarketplaceProvidersRouteWithChildren =
+  MarketplaceProvidersRoute._addFileChildren(MarketplaceProvidersRouteChildren)
 
-interface AdminShellRouteChildren {
-  AdminShellDashboardRoute: typeof AdminShellDashboardRoute
-  AdminShellServiceCategoriesRoute: typeof AdminShellServiceCategoriesRoute
-  AdminShellSettingsRoute: typeof AdminShellSettingsRoute
-  AdminShellUsersRoute: typeof AdminShellUsersRoute
-  AdminShellProvidersProviderIdRoute: typeof AdminShellProvidersProviderIdRoute
-  AdminShellRequestsRequestIdRoute: typeof AdminShellRequestsRequestIdRoute
-  AdminShellProvidersIndexRoute: typeof AdminShellProvidersIndexRoute
+interface MarketplaceRequestRouteChildren {
+  MarketplaceRequestSuccessRoute: typeof MarketplaceRequestSuccessRoute
 }
 
-const AdminShellRouteChildren: AdminShellRouteChildren = {
-  AdminShellDashboardRoute: AdminShellDashboardRoute,
-  AdminShellServiceCategoriesRoute: AdminShellServiceCategoriesRoute,
-  AdminShellSettingsRoute: AdminShellSettingsRoute,
-  AdminShellUsersRoute: AdminShellUsersRoute,
-  AdminShellProvidersProviderIdRoute: AdminShellProvidersProviderIdRoute,
-  AdminShellRequestsRequestIdRoute: AdminShellRequestsRequestIdRoute,
-  AdminShellProvidersIndexRoute: AdminShellProvidersIndexRoute,
+const MarketplaceRequestRouteChildren: MarketplaceRequestRouteChildren = {
+  MarketplaceRequestSuccessRoute: MarketplaceRequestSuccessRoute,
 }
 
-const AdminShellRouteWithChildren = AdminShellRoute._addFileChildren(
-  AdminShellRouteChildren,
+const MarketplaceRequestRouteWithChildren =
+  MarketplaceRequestRoute._addFileChildren(MarketplaceRequestRouteChildren)
+
+interface MarketplaceRouteChildren {
+  MarketplaceBillingRoute: typeof MarketplaceBillingRoute
+  MarketplaceForProvidersRoute: typeof MarketplaceForProvidersRoute
+  MarketplaceHowItWorksRoute: typeof MarketplaceHowItWorksRoute
+  MarketplaceProvidersRoute: typeof MarketplaceProvidersRouteWithChildren
+  MarketplaceRequestRoute: typeof MarketplaceRequestRouteWithChildren
+  MarketplaceRequestsRoute: typeof MarketplaceRequestsRoute
+  MarketplaceSignInRoute: typeof MarketplaceSignInRoute
+  MarketplaceIndexRoute: typeof MarketplaceIndexRoute
+}
+
+const MarketplaceRouteChildren: MarketplaceRouteChildren = {
+  MarketplaceBillingRoute: MarketplaceBillingRoute,
+  MarketplaceForProvidersRoute: MarketplaceForProvidersRoute,
+  MarketplaceHowItWorksRoute: MarketplaceHowItWorksRoute,
+  MarketplaceProvidersRoute: MarketplaceProvidersRouteWithChildren,
+  MarketplaceRequestRoute: MarketplaceRequestRouteWithChildren,
+  MarketplaceRequestsRoute: MarketplaceRequestsRoute,
+  MarketplaceSignInRoute: MarketplaceSignInRoute,
+  MarketplaceIndexRoute: MarketplaceIndexRoute,
+}
+
+const MarketplaceRouteWithChildren = MarketplaceRoute._addFileChildren(
+  MarketplaceRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BillingRoute: BillingRoute,
-  ForProvidersRoute: ForProvidersRoute,
-  HowItWorksRoute: HowItWorksRoute,
-  ProvidersRoute: ProvidersRouteWithChildren,
-  RequestRoute: RequestRouteWithChildren,
-  RequestsRoute: RequestsRoute,
+  AdminRoute: AdminRouteWithChildren,
+  MarketplaceRoute: MarketplaceRouteWithChildren,
   ServerErrorRoute: ServerErrorRoute,
-  SignInRoute: SignInRoute,
-  AdminShellRoute: AdminShellRouteWithChildren,
-  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
 import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
+import type { startInstance } from './start.ts'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
   }
 }

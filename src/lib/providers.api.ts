@@ -87,6 +87,22 @@ export async function listProviders(
   return (res.data?.data ?? res.data) as Paginated<ProviderListItem>;
 }
 
+/** Fetch every page of providers (DRF pagination). */
+export async function listAllProviders(): Promise<ProviderListItem[]> {
+  const items: ProviderListItem[] = [];
+  let page = 1;
+
+  while (true) {
+    const batch = await listProviders(page);
+    items.push(...batch.results);
+    const next = nextPageParam(batch);
+    if (next == null) break;
+    page = next;
+  }
+
+  return items;
+}
+
 export async function getProvider(id: string): Promise<ProviderDetail> {
   const res = await api.get(`/providers/${id}/`);
   return (res.data?.data ?? res.data) as ProviderDetail;

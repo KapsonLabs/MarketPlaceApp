@@ -6,16 +6,16 @@ import type {
   ForwardedMaintenanceRequest,
   PaymentRecord,
   RequestReview,
-} from "@/lib/request-types";
+} from "@/lib/marketplace/request-types";
 
 export type {
   RequestCategory,
   RequestStatus,
   ForwardedMaintenanceRequest,
   PaymentRecord,
-} from "@/lib/request-types";
-export { REQUEST_STATUSES } from "@/lib/request-types";
-export type { RequestPhoto, RequestLocation } from "@/lib/request-types";
+} from "@/lib/marketplace/request-types";
+export { REQUEST_STATUSES } from "@/lib/marketplace/request-types";
+export type { RequestPhoto, RequestLocation } from "@/lib/marketplace/request-types";
 
 const store: ForwardedMaintenanceRequest[] = [
   {

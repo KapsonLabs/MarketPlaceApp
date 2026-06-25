@@ -81,6 +81,22 @@ export async function listAdminServiceRequests(
   return (res.data?.data ?? res.data) as Paginated<ServiceRequestListItem>;
 }
 
+/** Fetch every page of admin service requests (DRF pagination). */
+export async function listAllAdminServiceRequests(): Promise<ServiceRequestListItem[]> {
+  const items: ServiceRequestListItem[] = [];
+  let page = 1;
+
+  while (true) {
+    const batch = await listAdminServiceRequests(page);
+    items.push(...batch.results);
+    const next = pageFromNext(batch.next);
+    if (next == null) break;
+    page = next;
+  }
+
+  return items;
+}
+
 export async function getAdminServiceRequest(
   id: string,
 ): Promise<ServiceRequestDetail> {
