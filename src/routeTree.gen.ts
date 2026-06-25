@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ServerErrorRouteImport } from './routes/server-error'
 import { Route as MarketplaceRouteImport } from './routes/marketplace'
-import { Route as AdminRouteImport } from './routes/admin'
+import { Route as AdministratorRouteImport } from './routes/administrator'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MarketplaceIndexRouteImport } from './routes/marketplace/index'
-import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdministratorIndexRouteImport } from './routes/administrator/index'
 import { Route as MarketplaceSignInRouteImport } from './routes/marketplace/sign-in'
 import { Route as MarketplaceRequestPhotosRouteImport } from './routes/marketplace/request-photos'
 import { Route as MarketplaceRequestRouteImport } from './routes/marketplace/request'
@@ -22,18 +22,18 @@ import { Route as MarketplaceProvidersRouteImport } from './routes/marketplace/p
 import { Route as MarketplaceHowItWorksRouteImport } from './routes/marketplace/how-it-works'
 import { Route as MarketplaceForProvidersRouteImport } from './routes/marketplace/for-providers'
 import { Route as MarketplaceBillingRouteImport } from './routes/marketplace/billing'
-import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdministratorLoginRouteImport } from './routes/administrator/login'
 import { Route as MarketplaceRequestsIndexRouteImport } from './routes/marketplace/requests.index'
-import { Route as AdminTasksIndexRouteImport } from './routes/admin/tasks.index'
-import { Route as AdminRequestsIndexRouteImport } from './routes/admin/requests.index'
-import { Route as AdminProvidersIndexRouteImport } from './routes/admin/providers.index'
-import { Route as AdminPaymentsIndexRouteImport } from './routes/admin/payments.index'
+import { Route as AdministratorTasksIndexRouteImport } from './routes/administrator/tasks.index'
+import { Route as AdministratorRequestsIndexRouteImport } from './routes/administrator/requests.index'
+import { Route as AdministratorProvidersIndexRouteImport } from './routes/administrator/providers.index'
+import { Route as AdministratorPaymentsIndexRouteImport } from './routes/administrator/payments.index'
 import { Route as MarketplaceRequestsRequestIdRouteImport } from './routes/marketplace/requests.$requestId'
 import { Route as MarketplaceProvidersProviderIdRouteImport } from './routes/marketplace/providers.$providerId'
-import { Route as AdminTasksTaskIdRouteImport } from './routes/admin/tasks.$taskId'
-import { Route as AdminRequestsRequestIdRouteImport } from './routes/admin/requests.$requestId'
-import { Route as AdminProvidersProviderIdRouteImport } from './routes/admin/providers.$providerId'
-import { Route as AdminPaymentsPaymentIdRouteImport } from './routes/admin/payments.$paymentId'
+import { Route as AdministratorTasksTaskIdRouteImport } from './routes/administrator/tasks.$taskId'
+import { Route as AdministratorRequestsRequestIdRouteImport } from './routes/administrator/requests.$requestId'
+import { Route as AdministratorProvidersProviderIdRouteImport } from './routes/administrator/providers.$providerId'
+import { Route as AdministratorPaymentsPaymentIdRouteImport } from './routes/administrator/payments.$paymentId'
 
 const ServerErrorRoute = ServerErrorRouteImport.update({
   id: '/server-error',
@@ -45,9 +45,9 @@ const MarketplaceRoute = MarketplaceRouteImport.update({
   path: '/marketplace',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const AdministratorRoute = AdministratorRouteImport.update({
+  id: '/administrator',
+  path: '/administrator',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -60,10 +60,10 @@ const MarketplaceIndexRoute = MarketplaceIndexRouteImport.update({
   path: '/',
   getParentRoute: () => MarketplaceRoute,
 } as any)
-const AdminIndexRoute = AdminIndexRouteImport.update({
+const AdministratorIndexRoute = AdministratorIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdministratorRoute,
 } as any)
 const MarketplaceSignInRoute = MarketplaceSignInRouteImport.update({
   id: '/sign-in',
@@ -101,10 +101,10 @@ const MarketplaceBillingRoute = MarketplaceBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => MarketplaceRoute,
 } as any)
-const AdminLoginRoute = AdminLoginRouteImport.update({
+const AdministratorLoginRoute = AdministratorLoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdministratorRoute,
 } as any)
 const MarketplaceRequestsIndexRoute =
   MarketplaceRequestsIndexRouteImport.update({
@@ -112,26 +112,29 @@ const MarketplaceRequestsIndexRoute =
     path: '/requests/',
     getParentRoute: () => MarketplaceRoute,
   } as any)
-const AdminTasksIndexRoute = AdminTasksIndexRouteImport.update({
+const AdministratorTasksIndexRoute = AdministratorTasksIndexRouteImport.update({
   id: '/tasks/',
   path: '/tasks/',
-  getParentRoute: () => AdminRoute,
+  getParentRoute: () => AdministratorRoute,
 } as any)
-const AdminRequestsIndexRoute = AdminRequestsIndexRouteImport.update({
-  id: '/requests/',
-  path: '/requests/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminProvidersIndexRoute = AdminProvidersIndexRouteImport.update({
-  id: '/providers/',
-  path: '/providers/',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminPaymentsIndexRoute = AdminPaymentsIndexRouteImport.update({
-  id: '/payments/',
-  path: '/payments/',
-  getParentRoute: () => AdminRoute,
-} as any)
+const AdministratorRequestsIndexRoute =
+  AdministratorRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => AdministratorRoute,
+  } as any)
+const AdministratorProvidersIndexRoute =
+  AdministratorProvidersIndexRouteImport.update({
+    id: '/providers/',
+    path: '/providers/',
+    getParentRoute: () => AdministratorRoute,
+  } as any)
+const AdministratorPaymentsIndexRoute =
+  AdministratorPaymentsIndexRouteImport.update({
+    id: '/payments/',
+    path: '/payments/',
+    getParentRoute: () => AdministratorRoute,
+  } as any)
 const MarketplaceRequestsRequestIdRoute =
   MarketplaceRequestsRequestIdRouteImport.update({
     id: '/requests/$requestId',
@@ -144,34 +147,37 @@ const MarketplaceProvidersProviderIdRoute =
     path: '/$providerId',
     getParentRoute: () => MarketplaceProvidersRoute,
   } as any)
-const AdminTasksTaskIdRoute = AdminTasksTaskIdRouteImport.update({
-  id: '/tasks/$taskId',
-  path: '/tasks/$taskId',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminRequestsRequestIdRoute = AdminRequestsRequestIdRouteImport.update({
-  id: '/requests/$requestId',
-  path: '/requests/$requestId',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminProvidersProviderIdRoute =
-  AdminProvidersProviderIdRouteImport.update({
+const AdministratorTasksTaskIdRoute =
+  AdministratorTasksTaskIdRouteImport.update({
+    id: '/tasks/$taskId',
+    path: '/tasks/$taskId',
+    getParentRoute: () => AdministratorRoute,
+  } as any)
+const AdministratorRequestsRequestIdRoute =
+  AdministratorRequestsRequestIdRouteImport.update({
+    id: '/requests/$requestId',
+    path: '/requests/$requestId',
+    getParentRoute: () => AdministratorRoute,
+  } as any)
+const AdministratorProvidersProviderIdRoute =
+  AdministratorProvidersProviderIdRouteImport.update({
     id: '/providers/$providerId',
     path: '/providers/$providerId',
-    getParentRoute: () => AdminRoute,
+    getParentRoute: () => AdministratorRoute,
   } as any)
-const AdminPaymentsPaymentIdRoute = AdminPaymentsPaymentIdRouteImport.update({
-  id: '/payments/$paymentId',
-  path: '/payments/$paymentId',
-  getParentRoute: () => AdminRoute,
-} as any)
+const AdministratorPaymentsPaymentIdRoute =
+  AdministratorPaymentsPaymentIdRouteImport.update({
+    id: '/payments/$paymentId',
+    path: '/payments/$paymentId',
+    getParentRoute: () => AdministratorRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/administrator': typeof AdministratorRouteWithChildren
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/server-error': typeof ServerErrorRoute
-  '/admin/login': typeof AdminLoginRoute
+  '/administrator/login': typeof AdministratorLoginRoute
   '/marketplace/billing': typeof MarketplaceBillingRoute
   '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
   '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
@@ -179,24 +185,24 @@ export interface FileRoutesByFullPath {
   '/marketplace/request': typeof MarketplaceRequestRoute
   '/marketplace/request-photos': typeof MarketplaceRequestPhotosRoute
   '/marketplace/sign-in': typeof MarketplaceSignInRoute
-  '/admin/': typeof AdminIndexRoute
+  '/administrator/': typeof AdministratorIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
-  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
-  '/admin/providers/$providerId': typeof AdminProvidersProviderIdRoute
-  '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
-  '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
+  '/administrator/payments/$paymentId': typeof AdministratorPaymentsPaymentIdRoute
+  '/administrator/providers/$providerId': typeof AdministratorProvidersProviderIdRoute
+  '/administrator/requests/$requestId': typeof AdministratorRequestsRequestIdRoute
+  '/administrator/tasks/$taskId': typeof AdministratorTasksTaskIdRoute
   '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
   '/marketplace/requests/$requestId': typeof MarketplaceRequestsRequestIdRoute
-  '/admin/payments/': typeof AdminPaymentsIndexRoute
-  '/admin/providers/': typeof AdminProvidersIndexRoute
-  '/admin/requests/': typeof AdminRequestsIndexRoute
-  '/admin/tasks/': typeof AdminTasksIndexRoute
+  '/administrator/payments/': typeof AdministratorPaymentsIndexRoute
+  '/administrator/providers/': typeof AdministratorProvidersIndexRoute
+  '/administrator/requests/': typeof AdministratorRequestsIndexRoute
+  '/administrator/tasks/': typeof AdministratorTasksIndexRoute
   '/marketplace/requests/': typeof MarketplaceRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/server-error': typeof ServerErrorRoute
-  '/admin/login': typeof AdminLoginRoute
+  '/administrator/login': typeof AdministratorLoginRoute
   '/marketplace/billing': typeof MarketplaceBillingRoute
   '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
   '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
@@ -204,27 +210,27 @@ export interface FileRoutesByTo {
   '/marketplace/request': typeof MarketplaceRequestRoute
   '/marketplace/request-photos': typeof MarketplaceRequestPhotosRoute
   '/marketplace/sign-in': typeof MarketplaceSignInRoute
-  '/admin': typeof AdminIndexRoute
+  '/administrator': typeof AdministratorIndexRoute
   '/marketplace': typeof MarketplaceIndexRoute
-  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
-  '/admin/providers/$providerId': typeof AdminProvidersProviderIdRoute
-  '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
-  '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
+  '/administrator/payments/$paymentId': typeof AdministratorPaymentsPaymentIdRoute
+  '/administrator/providers/$providerId': typeof AdministratorProvidersProviderIdRoute
+  '/administrator/requests/$requestId': typeof AdministratorRequestsRequestIdRoute
+  '/administrator/tasks/$taskId': typeof AdministratorTasksTaskIdRoute
   '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
   '/marketplace/requests/$requestId': typeof MarketplaceRequestsRequestIdRoute
-  '/admin/payments': typeof AdminPaymentsIndexRoute
-  '/admin/providers': typeof AdminProvidersIndexRoute
-  '/admin/requests': typeof AdminRequestsIndexRoute
-  '/admin/tasks': typeof AdminTasksIndexRoute
+  '/administrator/payments': typeof AdministratorPaymentsIndexRoute
+  '/administrator/providers': typeof AdministratorProvidersIndexRoute
+  '/administrator/requests': typeof AdministratorRequestsIndexRoute
+  '/administrator/tasks': typeof AdministratorTasksIndexRoute
   '/marketplace/requests': typeof MarketplaceRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRouteWithChildren
+  '/administrator': typeof AdministratorRouteWithChildren
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/server-error': typeof ServerErrorRoute
-  '/admin/login': typeof AdminLoginRoute
+  '/administrator/login': typeof AdministratorLoginRoute
   '/marketplace/billing': typeof MarketplaceBillingRoute
   '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
   '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
@@ -232,28 +238,28 @@ export interface FileRoutesById {
   '/marketplace/request': typeof MarketplaceRequestRoute
   '/marketplace/request-photos': typeof MarketplaceRequestPhotosRoute
   '/marketplace/sign-in': typeof MarketplaceSignInRoute
-  '/admin/': typeof AdminIndexRoute
+  '/administrator/': typeof AdministratorIndexRoute
   '/marketplace/': typeof MarketplaceIndexRoute
-  '/admin/payments/$paymentId': typeof AdminPaymentsPaymentIdRoute
-  '/admin/providers/$providerId': typeof AdminProvidersProviderIdRoute
-  '/admin/requests/$requestId': typeof AdminRequestsRequestIdRoute
-  '/admin/tasks/$taskId': typeof AdminTasksTaskIdRoute
+  '/administrator/payments/$paymentId': typeof AdministratorPaymentsPaymentIdRoute
+  '/administrator/providers/$providerId': typeof AdministratorProvidersProviderIdRoute
+  '/administrator/requests/$requestId': typeof AdministratorRequestsRequestIdRoute
+  '/administrator/tasks/$taskId': typeof AdministratorTasksTaskIdRoute
   '/marketplace/providers/$providerId': typeof MarketplaceProvidersProviderIdRoute
   '/marketplace/requests/$requestId': typeof MarketplaceRequestsRequestIdRoute
-  '/admin/payments/': typeof AdminPaymentsIndexRoute
-  '/admin/providers/': typeof AdminProvidersIndexRoute
-  '/admin/requests/': typeof AdminRequestsIndexRoute
-  '/admin/tasks/': typeof AdminTasksIndexRoute
+  '/administrator/payments/': typeof AdministratorPaymentsIndexRoute
+  '/administrator/providers/': typeof AdministratorProvidersIndexRoute
+  '/administrator/requests/': typeof AdministratorRequestsIndexRoute
+  '/administrator/tasks/': typeof AdministratorTasksIndexRoute
   '/marketplace/requests/': typeof MarketplaceRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/admin'
+    | '/administrator'
     | '/marketplace'
     | '/server-error'
-    | '/admin/login'
+    | '/administrator/login'
     | '/marketplace/billing'
     | '/marketplace/for-providers'
     | '/marketplace/how-it-works'
@@ -261,24 +267,24 @@ export interface FileRouteTypes {
     | '/marketplace/request'
     | '/marketplace/request-photos'
     | '/marketplace/sign-in'
-    | '/admin/'
+    | '/administrator/'
     | '/marketplace/'
-    | '/admin/payments/$paymentId'
-    | '/admin/providers/$providerId'
-    | '/admin/requests/$requestId'
-    | '/admin/tasks/$taskId'
+    | '/administrator/payments/$paymentId'
+    | '/administrator/providers/$providerId'
+    | '/administrator/requests/$requestId'
+    | '/administrator/tasks/$taskId'
     | '/marketplace/providers/$providerId'
     | '/marketplace/requests/$requestId'
-    | '/admin/payments/'
-    | '/admin/providers/'
-    | '/admin/requests/'
-    | '/admin/tasks/'
+    | '/administrator/payments/'
+    | '/administrator/providers/'
+    | '/administrator/requests/'
+    | '/administrator/tasks/'
     | '/marketplace/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/server-error'
-    | '/admin/login'
+    | '/administrator/login'
     | '/marketplace/billing'
     | '/marketplace/for-providers'
     | '/marketplace/how-it-works'
@@ -286,26 +292,26 @@ export interface FileRouteTypes {
     | '/marketplace/request'
     | '/marketplace/request-photos'
     | '/marketplace/sign-in'
-    | '/admin'
+    | '/administrator'
     | '/marketplace'
-    | '/admin/payments/$paymentId'
-    | '/admin/providers/$providerId'
-    | '/admin/requests/$requestId'
-    | '/admin/tasks/$taskId'
+    | '/administrator/payments/$paymentId'
+    | '/administrator/providers/$providerId'
+    | '/administrator/requests/$requestId'
+    | '/administrator/tasks/$taskId'
     | '/marketplace/providers/$providerId'
     | '/marketplace/requests/$requestId'
-    | '/admin/payments'
-    | '/admin/providers'
-    | '/admin/requests'
-    | '/admin/tasks'
+    | '/administrator/payments'
+    | '/administrator/providers'
+    | '/administrator/requests'
+    | '/administrator/tasks'
     | '/marketplace/requests'
   id:
     | '__root__'
     | '/'
-    | '/admin'
+    | '/administrator'
     | '/marketplace'
     | '/server-error'
-    | '/admin/login'
+    | '/administrator/login'
     | '/marketplace/billing'
     | '/marketplace/for-providers'
     | '/marketplace/how-it-works'
@@ -313,24 +319,24 @@ export interface FileRouteTypes {
     | '/marketplace/request'
     | '/marketplace/request-photos'
     | '/marketplace/sign-in'
-    | '/admin/'
+    | '/administrator/'
     | '/marketplace/'
-    | '/admin/payments/$paymentId'
-    | '/admin/providers/$providerId'
-    | '/admin/requests/$requestId'
-    | '/admin/tasks/$taskId'
+    | '/administrator/payments/$paymentId'
+    | '/administrator/providers/$providerId'
+    | '/administrator/requests/$requestId'
+    | '/administrator/tasks/$taskId'
     | '/marketplace/providers/$providerId'
     | '/marketplace/requests/$requestId'
-    | '/admin/payments/'
-    | '/admin/providers/'
-    | '/admin/requests/'
-    | '/admin/tasks/'
+    | '/administrator/payments/'
+    | '/administrator/providers/'
+    | '/administrator/requests/'
+    | '/administrator/tasks/'
     | '/marketplace/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRouteWithChildren
+  AdministratorRoute: typeof AdministratorRouteWithChildren
   MarketplaceRoute: typeof MarketplaceRouteWithChildren
   ServerErrorRoute: typeof ServerErrorRoute
 }
@@ -351,11 +357,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
+    '/administrator': {
+      id: '/administrator'
+      path: '/administrator'
+      fullPath: '/administrator'
+      preLoaderRoute: typeof AdministratorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -372,12 +378,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceIndexRouteImport
       parentRoute: typeof MarketplaceRoute
     }
-    '/admin/': {
-      id: '/admin/'
+    '/administrator/': {
+      id: '/administrator/'
       path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AdminIndexRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/'
+      preLoaderRoute: typeof AdministratorIndexRouteImport
+      parentRoute: typeof AdministratorRoute
     }
     '/marketplace/sign-in': {
       id: '/marketplace/sign-in'
@@ -428,12 +434,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceBillingRouteImport
       parentRoute: typeof MarketplaceRoute
     }
-    '/admin/login': {
-      id: '/admin/login'
+    '/administrator/login': {
+      id: '/administrator/login'
       path: '/login'
-      fullPath: '/admin/login'
-      preLoaderRoute: typeof AdminLoginRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/login'
+      preLoaderRoute: typeof AdministratorLoginRouteImport
+      parentRoute: typeof AdministratorRoute
     }
     '/marketplace/requests/': {
       id: '/marketplace/requests/'
@@ -442,33 +448,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceRequestsIndexRouteImport
       parentRoute: typeof MarketplaceRoute
     }
-    '/admin/tasks/': {
-      id: '/admin/tasks/'
+    '/administrator/tasks/': {
+      id: '/administrator/tasks/'
       path: '/tasks'
-      fullPath: '/admin/tasks/'
-      preLoaderRoute: typeof AdminTasksIndexRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/tasks/'
+      preLoaderRoute: typeof AdministratorTasksIndexRouteImport
+      parentRoute: typeof AdministratorRoute
     }
-    '/admin/requests/': {
-      id: '/admin/requests/'
+    '/administrator/requests/': {
+      id: '/administrator/requests/'
       path: '/requests'
-      fullPath: '/admin/requests/'
-      preLoaderRoute: typeof AdminRequestsIndexRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/requests/'
+      preLoaderRoute: typeof AdministratorRequestsIndexRouteImport
+      parentRoute: typeof AdministratorRoute
     }
-    '/admin/providers/': {
-      id: '/admin/providers/'
+    '/administrator/providers/': {
+      id: '/administrator/providers/'
       path: '/providers'
-      fullPath: '/admin/providers/'
-      preLoaderRoute: typeof AdminProvidersIndexRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/providers/'
+      preLoaderRoute: typeof AdministratorProvidersIndexRouteImport
+      parentRoute: typeof AdministratorRoute
     }
-    '/admin/payments/': {
-      id: '/admin/payments/'
+    '/administrator/payments/': {
+      id: '/administrator/payments/'
       path: '/payments'
-      fullPath: '/admin/payments/'
-      preLoaderRoute: typeof AdminPaymentsIndexRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/payments/'
+      preLoaderRoute: typeof AdministratorPaymentsIndexRouteImport
+      parentRoute: typeof AdministratorRoute
     }
     '/marketplace/requests/$requestId': {
       id: '/marketplace/requests/$requestId'
@@ -484,64 +490,66 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceProvidersProviderIdRouteImport
       parentRoute: typeof MarketplaceProvidersRoute
     }
-    '/admin/tasks/$taskId': {
-      id: '/admin/tasks/$taskId'
+    '/administrator/tasks/$taskId': {
+      id: '/administrator/tasks/$taskId'
       path: '/tasks/$taskId'
-      fullPath: '/admin/tasks/$taskId'
-      preLoaderRoute: typeof AdminTasksTaskIdRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/tasks/$taskId'
+      preLoaderRoute: typeof AdministratorTasksTaskIdRouteImport
+      parentRoute: typeof AdministratorRoute
     }
-    '/admin/requests/$requestId': {
-      id: '/admin/requests/$requestId'
+    '/administrator/requests/$requestId': {
+      id: '/administrator/requests/$requestId'
       path: '/requests/$requestId'
-      fullPath: '/admin/requests/$requestId'
-      preLoaderRoute: typeof AdminRequestsRequestIdRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/requests/$requestId'
+      preLoaderRoute: typeof AdministratorRequestsRequestIdRouteImport
+      parentRoute: typeof AdministratorRoute
     }
-    '/admin/providers/$providerId': {
-      id: '/admin/providers/$providerId'
+    '/administrator/providers/$providerId': {
+      id: '/administrator/providers/$providerId'
       path: '/providers/$providerId'
-      fullPath: '/admin/providers/$providerId'
-      preLoaderRoute: typeof AdminProvidersProviderIdRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/providers/$providerId'
+      preLoaderRoute: typeof AdministratorProvidersProviderIdRouteImport
+      parentRoute: typeof AdministratorRoute
     }
-    '/admin/payments/$paymentId': {
-      id: '/admin/payments/$paymentId'
+    '/administrator/payments/$paymentId': {
+      id: '/administrator/payments/$paymentId'
       path: '/payments/$paymentId'
-      fullPath: '/admin/payments/$paymentId'
-      preLoaderRoute: typeof AdminPaymentsPaymentIdRouteImport
-      parentRoute: typeof AdminRoute
+      fullPath: '/administrator/payments/$paymentId'
+      preLoaderRoute: typeof AdministratorPaymentsPaymentIdRouteImport
+      parentRoute: typeof AdministratorRoute
     }
   }
 }
 
-interface AdminRouteChildren {
-  AdminLoginRoute: typeof AdminLoginRoute
-  AdminIndexRoute: typeof AdminIndexRoute
-  AdminPaymentsPaymentIdRoute: typeof AdminPaymentsPaymentIdRoute
-  AdminProvidersProviderIdRoute: typeof AdminProvidersProviderIdRoute
-  AdminRequestsRequestIdRoute: typeof AdminRequestsRequestIdRoute
-  AdminTasksTaskIdRoute: typeof AdminTasksTaskIdRoute
-  AdminPaymentsIndexRoute: typeof AdminPaymentsIndexRoute
-  AdminProvidersIndexRoute: typeof AdminProvidersIndexRoute
-  AdminRequestsIndexRoute: typeof AdminRequestsIndexRoute
-  AdminTasksIndexRoute: typeof AdminTasksIndexRoute
+interface AdministratorRouteChildren {
+  AdministratorLoginRoute: typeof AdministratorLoginRoute
+  AdministratorIndexRoute: typeof AdministratorIndexRoute
+  AdministratorPaymentsPaymentIdRoute: typeof AdministratorPaymentsPaymentIdRoute
+  AdministratorProvidersProviderIdRoute: typeof AdministratorProvidersProviderIdRoute
+  AdministratorRequestsRequestIdRoute: typeof AdministratorRequestsRequestIdRoute
+  AdministratorTasksTaskIdRoute: typeof AdministratorTasksTaskIdRoute
+  AdministratorPaymentsIndexRoute: typeof AdministratorPaymentsIndexRoute
+  AdministratorProvidersIndexRoute: typeof AdministratorProvidersIndexRoute
+  AdministratorRequestsIndexRoute: typeof AdministratorRequestsIndexRoute
+  AdministratorTasksIndexRoute: typeof AdministratorTasksIndexRoute
 }
 
-const AdminRouteChildren: AdminRouteChildren = {
-  AdminLoginRoute: AdminLoginRoute,
-  AdminIndexRoute: AdminIndexRoute,
-  AdminPaymentsPaymentIdRoute: AdminPaymentsPaymentIdRoute,
-  AdminProvidersProviderIdRoute: AdminProvidersProviderIdRoute,
-  AdminRequestsRequestIdRoute: AdminRequestsRequestIdRoute,
-  AdminTasksTaskIdRoute: AdminTasksTaskIdRoute,
-  AdminPaymentsIndexRoute: AdminPaymentsIndexRoute,
-  AdminProvidersIndexRoute: AdminProvidersIndexRoute,
-  AdminRequestsIndexRoute: AdminRequestsIndexRoute,
-  AdminTasksIndexRoute: AdminTasksIndexRoute,
+const AdministratorRouteChildren: AdministratorRouteChildren = {
+  AdministratorLoginRoute: AdministratorLoginRoute,
+  AdministratorIndexRoute: AdministratorIndexRoute,
+  AdministratorPaymentsPaymentIdRoute: AdministratorPaymentsPaymentIdRoute,
+  AdministratorProvidersProviderIdRoute: AdministratorProvidersProviderIdRoute,
+  AdministratorRequestsRequestIdRoute: AdministratorRequestsRequestIdRoute,
+  AdministratorTasksTaskIdRoute: AdministratorTasksTaskIdRoute,
+  AdministratorPaymentsIndexRoute: AdministratorPaymentsIndexRoute,
+  AdministratorProvidersIndexRoute: AdministratorProvidersIndexRoute,
+  AdministratorRequestsIndexRoute: AdministratorRequestsIndexRoute,
+  AdministratorTasksIndexRoute: AdministratorTasksIndexRoute,
 }
 
-const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+const AdministratorRouteWithChildren = AdministratorRoute._addFileChildren(
+  AdministratorRouteChildren,
+)
 
 interface MarketplaceProvidersRouteChildren {
   MarketplaceProvidersProviderIdRoute: typeof MarketplaceProvidersProviderIdRoute
@@ -586,20 +594,10 @@ const MarketplaceRouteWithChildren = MarketplaceRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRouteWithChildren,
+  AdministratorRoute: AdministratorRouteWithChildren,
   MarketplaceRoute: MarketplaceRouteWithChildren,
   ServerErrorRoute: ServerErrorRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

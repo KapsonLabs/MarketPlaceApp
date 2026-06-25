@@ -62,7 +62,7 @@ api.interceptors.response.use(
       if (getAdminSession()) {
         clearAdminSession();
         if (typeof window !== "undefined") {
-          window.location.assign("/admin/login");
+          window.location.assign("/administrator/login");
         }
       } else if (getMarketplaceSession()) {
         clearMarketplaceSession();

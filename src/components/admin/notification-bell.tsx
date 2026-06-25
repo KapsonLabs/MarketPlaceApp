@@ -26,9 +26,9 @@ function targetFor(
     return null;
   }
   if (n.resource_type === "service_request")
-    return { to: "/admin/requests/$requestId", params: { requestId: n.resource_id } };
+    return { to: "/administrator/requests/$requestId", params: { requestId: n.resource_id } };
   if (n.resource_type === "provider")
-    return { to: "/admin/providers/$providerId", params: { providerId: n.resource_id } };
+    return { to: "/administrator/providers/$providerId", params: { providerId: n.resource_id } };
   return null;
 }
 

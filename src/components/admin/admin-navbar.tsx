@@ -6,12 +6,12 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { clearAdminSession, useAdminSession } from "@/lib/admin-auth";
 
 const titles: Record<string, string> = {
-  "/admin/dashboard": "Service requests",
-  "/admin/requests": "Service requests",
-  "/admin/providers": "Providers",
-  "/admin/service-categories": "Service categories",
-  "/admin/users": "Users",
-  "/admin/settings": "Settings",
+  "/administrator/dashboard": "Service requests",
+  "/administrator/requests": "Service requests",
+  "/administrator/providers": "Providers",
+  "/administrator/service-categories": "Service categories",
+  "/administrator/users": "Users",
+  "/administrator/settings": "Settings",
 };
 
 export function AdminNavbar() {
@@ -26,7 +26,7 @@ export function AdminNavbar() {
 
   function onLogout() {
     clearAdminSession();
-    navigate({ to: "/admin" });
+    navigate({ to: "/administrator" });
   }
 
   return (

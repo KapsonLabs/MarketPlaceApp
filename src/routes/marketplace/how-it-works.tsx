@@ -156,7 +156,7 @@ function HowItWorks() {
               <Link to="/marketplace/request">Submit a request</Link>
             </Button>
             <Button asChild size="lg" variant="outline">
-              <Link to="/admin/dashboard">Open admin dashboard</Link>
+              <Link to="/administrator/dashboard">Open admin dashboard</Link>
             </Button>
           </div>
         </section>

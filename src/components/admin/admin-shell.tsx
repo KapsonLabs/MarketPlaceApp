@@ -17,11 +17,11 @@ import { clearAdminSession, useAdminSession } from "@/lib/admin-auth";
 import { useNotificationSocket } from "@/lib/notifications.ws";
 
 const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/admin/requests", label: "Requests", icon: Inbox },
-  { to: "/admin/providers", label: "Providers", icon: Users },
-  { to: "/admin/tasks", label: "Tasks", icon: ListChecks },
-  { to: "/admin/payments", label: "Payments", icon: Wallet },
+  { to: "/administrator", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/administrator/requests", label: "Requests", icon: Inbox },
+  { to: "/administrator/providers", label: "Providers", icon: Users },
+  { to: "/administrator/tasks", label: "Tasks", icon: ListChecks },
+  { to: "/administrator/payments", label: "Payments", icon: Wallet },
 ] as const;
 
 export function AdminShell({
@@ -46,7 +46,7 @@ export function AdminShell({
 
   function handleSignOut() {
     clearAdminSession();
-    router.navigate({ to: "/admin/login" });
+    router.navigate({ to: "/administrator/login" });
   }
 
   return (
@@ -69,7 +69,7 @@ export function AdminShell({
                 key={item.to}
                 to={item.to}
                 className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                activeOptions={{ exact: item.to === "/admin" }}
+                activeOptions={{ exact: item.to === "/administrator" }}
                 activeProps={{
                   className:
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm bg-sidebar-primary text-sidebar-primary-foreground font-medium",
