@@ -229,6 +229,14 @@ export async function makeServiceRequestPayment(
   return (res.data?.data ?? res.data) as RequestPayment;
 }
 
+/** Provider marks an assigned service request as started, kicking off the work order. */
+export async function startServiceRequest(
+  id: string,
+): Promise<ServiceRequestDetail> {
+  const res = await api.post(`/service-requests/${id}/start/`);
+  return (res.data?.data ?? res.data) as ServiceRequestDetail;
+}
+
 /** Derive the next page number from a DRF `next` URL, or undefined when there is none. */
 export function pageFromNext(next: string | null): number | undefined {
   if (!next) return undefined;

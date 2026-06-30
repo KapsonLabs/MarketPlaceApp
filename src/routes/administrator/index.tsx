@@ -63,7 +63,7 @@ function Dashboard() {
       hint: `${pendingOnboarding} pending onboarding`,
     },
     {
-      label: "Tasks in flight",
+      label: "Work orders in flight",
       value: openTasks,
       icon: ListChecks,
       hint: `${tasks.length} total tracked`,

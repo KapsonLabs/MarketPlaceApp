@@ -20,7 +20,7 @@ const navItems = [
   { to: "/administrator", label: "Dashboard", icon: LayoutDashboard },
   { to: "/administrator/requests", label: "Requests", icon: Inbox },
   { to: "/administrator/providers", label: "Providers", icon: Users },
-  { to: "/administrator/tasks", label: "Tasks", icon: ListChecks },
+  { to: "/administrator/tasks", label: "Work Orders", icon: ListChecks },
   { to: "/administrator/payments", label: "Payments", icon: Wallet },
 ] as const;
 

@@ -1,183 +1,170 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { CalendarClock } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import type { ColumnDef } from "@tanstack/react-table";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PaginatedDataTable } from "@/components/admin/paginated-data-table";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   FilterBar,
   SearchInput,
   FilterSelect,
-  DateRangeFilter,
   ClearFiltersButton,
-  inDateRange,
 } from "@/components/admin/list-filters";
-import { useAppState } from "@/lib/admin/store";
+import { useAdminSession } from "@/lib/admin-auth";
 import {
-  getProvider,
-  getRequest,
-  TASK_STATUS_LABEL,
-  type Task,
-  type TaskStatus,
-} from "@/lib/admin/mock-data";
+  listAdminWorkOrders,
+  listMyWorkOrders,
+  WORK_ORDER_STATUS_OPTIONS,
+  WORK_ORDER_STATUS_LABEL,
+  type WorkOrder,
+} from "@/lib/api/work-orders.api";
 
 export const Route = createFileRoute("/administrator/tasks/")({
-  head: () => ({ meta: [{ title: "Tasks — Casmara Systems Admin" }] }),
-  component: TasksPage,
+  head: () => ({ meta: [{ title: "Work Orders — Casmara Systems Admin" }] }),
+  component: WorkOrdersPage,
 });
 
-const COLUMNS: TaskStatus[] = ["Todo", "InProgress", "Blocked", "Done"];
+const columns: ColumnDef<WorkOrder, unknown>[] = [
+  {
+    id: "service_request",
+    header: "Work order",
+    cell: ({ row }) => (
+      <div>
+        <p className="font-medium text-foreground">
+          {row.original.service_request.title}
+        </p>
+        <p className="text-xs text-muted-foreground">{row.original.id}</p>
+      </div>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ getValue }) => {
+      const status = getValue<string>();
+      return (
+        <StatusBadge
+          kind="work-order"
+          value={status}
+          label={WORK_ORDER_STATUS_LABEL[status] ?? status}
+        />
+      );
+    },
+  },
+  {
+    id: "provider",
+    header: "Provider",
+    cell: ({ row }) => (
+      <span className="text-sm text-muted-foreground">
+        {row.original.provider.name}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "actual_start",
+    header: "Started",
+    cell: ({ getValue }) => {
+      const value = getValue<string | null>();
+      return value ? (
+        <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+          <CalendarClock className="h-3.5 w-3.5" />
+          {new Date(value).toLocaleDateString()}
+        </span>
+      ) : (
+        <span className="text-muted-foreground/50">—</span>
+      );
+    },
+  },
+];
 
-function TasksPage() {
-  const { tasks, providers } = useAppState();
+function WorkOrdersPage() {
   const navigate = useNavigate();
+  const session = useAdminSession();
+  const isAdmin = session?.user.role.slug === "admin";
+
+  const [page, setPage] = useState(1);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [providerFilter, setProviderFilter] = useState("all");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
 
-  const hasAdvanced =
-    statusFilter !== "all" ||
-    providerFilter !== "all" ||
-    !!fromDate ||
-    !!toDate ||
-    !!query;
+  const hasAdvanced = statusFilter !== "all" || !!query;
 
-  const clearAll = () => {
+  function clearAll() {
     setQuery("");
     setStatusFilter("all");
-    setProviderFilter("all");
-    setFromDate("");
-    setToDate("");
-  };
+    setPage(1);
+  }
 
-  const filtered = useMemo(() => {
-    return tasks.filter((t) => {
-      const request = getRequest(t.requestId);
-      const provider = getProvider(t.providerId);
-      const matchesQuery =
-        !query ||
-        [t.id, t.title, request?.title, request?.city, provider?.company]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase()
-          .includes(query.toLowerCase());
-      const matchesStatus = statusFilter === "all" || t.status === statusFilter;
-      const matchesProvider =
-        providerFilter === "all" || t.providerId === providerFilter;
-      const matchesDate = inDateRange(t.dueDate, fromDate, toDate);
-      return matchesQuery && matchesStatus && matchesProvider && matchesDate;
-    });
-  }, [tasks, query, statusFilter, providerFilter, fromDate, toDate]);
+  const statusParam = statusFilter !== "all" ? statusFilter : undefined;
 
-  const grouped = useMemo(() => {
-    const map: Record<TaskStatus, Task[]> = {
-      Todo: [],
-      InProgress: [],
-      Blocked: [],
-      Done: [],
-    };
-    for (const t of filtered) map[t.status].push(t);
-    return map;
-  }, [filtered]);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["work-orders", isAdmin ? "admin" : "my", page, statusFilter],
+    queryFn: () =>
+      isAdmin
+        ? listAdminWorkOrders(page, { status: statusParam })
+        : listMyWorkOrders(page, { status: statusParam }),
+    placeholderData: (prev) => prev,
+    enabled: !!session,
+  });
 
-  const visibleColumns =
-    statusFilter === "all" ? COLUMNS : COLUMNS.filter((c) => c === statusFilter);
+  const rows = useMemo(() => {
+    const results = data?.results ?? [];
+    if (!query) return results;
+    const q = query.toLowerCase();
+    return results.filter((wo) =>
+      [wo.id, wo.service_request.title, wo.provider.name, wo.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [data, query]);
 
   return (
     <AdminShell
-      title="Task management"
-      description="Track every job assigned to providers. Open a task to update status, notes, and due date."
+      title="Work order management"
+      description="Track every job assigned to providers. Open a work order to update status, notes, and due date."
     >
       <Card className="mb-4 border-border">
         <CardContent className="p-4">
           <FilterBar>
             <SearchInput
               value={query}
-              onChange={setQuery}
-              placeholder="Search by title, request, provider…"
+              onChange={(v) => { setQuery(v); setPage(1); }}
+              placeholder="Search by title, provider, ID…"
             />
             <FilterSelect
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(v) => { setStatusFilter(v); setPage(1); }}
               allLabel="All statuses"
-              options={COLUMNS.map((s) => ({ value: s, label: TASK_STATUS_LABEL[s] }))}
-            />
-            <FilterSelect
-              value={providerFilter}
-              onChange={setProviderFilter}
-              allLabel="All providers"
-              width="w-[190px]"
-              options={providers.map((p) => ({ value: p.id, label: p.company }))}
-            />
-            <DateRangeFilter
-              from={fromDate}
-              to={toDate}
-              onFrom={setFromDate}
-              onTo={setToDate}
+              options={WORK_ORDER_STATUS_OPTIONS}
             />
             <ClearFiltersButton active={hasAdvanced} onClear={clearAll} />
             <p className="ml-auto text-xs text-muted-foreground">
-              {filtered.length} of {tasks.length} tasks
+              {data?.count ?? 0} work orders
             </p>
           </FilterBar>
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {visibleColumns.map((col) => (
-          <Card key={col} className="border-border">
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-sm font-semibold">
-                {TASK_STATUS_LABEL[col]}
-              </CardTitle>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                {grouped[col].length}
-              </span>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {grouped[col].length === 0 && (
-                <p className="rounded-md border border-dashed border-border py-6 text-center text-xs text-muted-foreground">
-                  Nothing here
-                </p>
-              )}
-              {grouped[col].map((t) => {
-                const provider = getProvider(t.providerId);
-                const request = getRequest(t.requestId);
-                return (
-                  <button
-                    key={t.id}
-                    onClick={() =>
-                      navigate({ to: "/administrator/tasks/$taskId", params: { taskId: t.id } })
-                    }
-                    className="w-full space-y-2 rounded-md border border-border bg-card p-3 text-left shadow-sm transition-colors hover:bg-accent/50"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-medium leading-snug text-foreground">
-                        {t.title}
-                      </p>
-                      <StatusBadge kind="task" value={t.status} />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {request?.title ?? t.requestId} • {request?.city}
-                    </p>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">
-                        {provider?.company ?? "Unassigned"}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-muted-foreground">
-                        <CalendarClock className="h-3 w-3" />
-                        {new Date(t.dueDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <PaginatedDataTable
+        columns={columns}
+        data={rows}
+        totalCount={data?.count ?? 0}
+        page={page}
+        hasPrev={!!data?.previous}
+        hasNext={!!data?.next}
+        onPrev={() => setPage((p) => p - 1)}
+        onNext={() => setPage((p) => p + 1)}
+        isLoading={isLoading}
+        isError={isError}
+        emptyMessage="No work orders match the current filters."
+        onRowClick={(wo) =>
+          navigate({ to: "/administrator/tasks/$taskId", params: { taskId: wo.id } })
+        }
+      />
     </AdminShell>
   );
 }

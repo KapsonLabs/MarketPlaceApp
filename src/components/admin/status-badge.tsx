@@ -38,6 +38,14 @@ const taskTone: Record<TaskStatus, string> = {
   Done: "bg-success/15 text-success border-success/40",
 };
 
+const workOrderTone: Record<string, string> = {
+  pending: "bg-muted text-muted-foreground border-border",
+  in_progress: "bg-primary/15 text-primary border-primary/40",
+  on_hold: "bg-warning/15 text-warning-foreground border-warning/40",
+  completed: "bg-success/15 text-success border-success/40",
+  cancelled: "bg-destructive/15 text-destructive border-destructive/40",
+};
+
 const paymentTone: Record<PaymentStatus, string> = {
   Pending: "bg-warning/15 text-warning-foreground border-warning/40",
   Approved: "bg-primary/15 text-primary border-primary/40",
@@ -48,9 +56,11 @@ const paymentTone: Record<PaymentStatus, string> = {
 export function StatusBadge({
   kind,
   value,
+  label,
 }: {
-  kind: "request" | "priority" | "provider" | "task" | "payment";
+  kind: "request" | "priority" | "provider" | "task" | "work-order" | "payment";
   value: string;
+  label?: string;
 }) {
   const map =
     kind === "request"
@@ -61,11 +71,13 @@ export function StatusBadge({
           ? providerTone
           : kind === "task"
             ? taskTone
-            : paymentTone;
+            : kind === "work-order"
+              ? workOrderTone
+              : paymentTone;
   const cls = (map as Record<string, string>)[value] ?? "";
   return (
     <Badge variant="outline" className={cn("font-medium", cls)}>
-      {value}
+      {label ?? value}
     </Badge>
   );
 }
