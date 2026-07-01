@@ -5,3 +5,4 @@ export { RHFSelect } from "./RHFSelect";
 export type { SelectOption } from "./RHFSelect";
 export { RHFCheckbox } from "./RHFCheckbox";
 export { RHFSwitch } from "./RHFSwitch";
+export { RHFPhoneInput } from "./RHFPhoneInput";

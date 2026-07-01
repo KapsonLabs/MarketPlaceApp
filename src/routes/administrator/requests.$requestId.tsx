@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Clock,
   CreditCard,
+  ExternalLink,
   Loader2,
   Mail,
   MapPin,
@@ -136,7 +137,7 @@ function RequestDetailPage() {
 
   const categoriesQuery = useQuery({
     queryKey: ["service-categories"],
-    queryFn: listServiceCategories,
+    queryFn: () => listServiceCategories(),
   });
 
   const providerNames = useMemo(
@@ -386,13 +387,19 @@ function RequestDetailPage() {
             <p className="text-sm leading-6 text-foreground/90">{request.description}</p>
 
             <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
+              <a
+                href={`https://maps.google.com/maps?q=${request.latitude},${request.longitude}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-primary"
+              >
                 <MapPin className="h-4 w-4" />
                 {categoryName}
                 {(request.city || request.district) && (
                   <> · {[request.city, request.district].filter(Boolean).join(", ")}</>
                 )}
-              </span>
+                <ExternalLink className="h-3 w-3 opacity-60" />
+              </a>
               <span className="inline-flex items-center gap-1.5 capitalize">
                 <Users className="h-4 w-4" />
                 {prettify(request.assignment_type)}

@@ -32,6 +32,7 @@ const tone: Record<string, string> = {
   // payment statuses
   paid: "bg-success/15 text-success border-success/40",
   deposit_paid: "bg-primary/10 text-primary border-primary/30",
+  payment_pending: "bg-warning/15 text-warning-foreground border-warning/40",
   unpaid: "bg-muted text-muted-foreground border-border",
   // negative
   rejected: "bg-destructive/10 text-destructive border-destructive/40",
@@ -41,6 +42,7 @@ const tone: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   awaiting_assignment: "Assigning",
+  payment_pending: "Payment Pending",
 };
 
 function prettify(value: string) {

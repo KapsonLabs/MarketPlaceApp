@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { useCurrentUser } from "@/lib/marketplace/current-user";
 import { LocationPicker, type PickedLocation } from "@/components/marketplace/location-picker";
+import { PhoneInput, type PhoneValue } from "@/components/ui/phone-input";
 import { listAllServiceCategories } from "@/lib/service-categories.api";
 import { createServiceRequest } from "@/lib/service-requests.api";
 import { getProvider, listAllProviders } from "@/lib/providers.api";
@@ -184,7 +185,7 @@ function RequestPage() {
   function nextStep() {
     setError(null);
     if (!stepValid.ok) {
-      setError(stepValid.message);
+      setError(stepValid.message ?? null);
       return;
     }
     setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
@@ -202,7 +203,7 @@ function RequestPage() {
     // Enter in an input fires form submit on any step — only advance or submit on review.
     if (stepIndex < STEPS.length - 1) {
       if (!stepValid.ok) {
-        setError(stepValid.message);
+        setError(stepValid.message ?? null);
         return;
       }
       setStepIndex((i) => Math.min(i + 1, STEPS.length - 1));
@@ -514,22 +515,17 @@ function RequestPage() {
 
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field label="Phone" id="contactPhone" required>
-                    <Input
-                      id="contactPhone"
-                      type="tel"
-                      required
-                      placeholder="+256700000000"
-                      value={form.contactPhone}
-                      onChange={(e) => update("contactPhone", e.target.value)}
+                    <PhoneInput
+                      value={(form.contactPhone || undefined) as PhoneValue | undefined}
+                      onChange={(v) => update("contactPhone", v ?? "")}
+                      placeholder="700 000000"
                     />
                   </Field>
                   <Field label="Alternate phone" id="contactAlternatePhone">
-                    <Input
-                      id="contactAlternatePhone"
-                      type="tel"
+                    <PhoneInput
+                      value={(form.contactAlternatePhone || undefined) as PhoneValue | undefined}
+                      onChange={(v) => update("contactAlternatePhone", v ?? "")}
                       placeholder="Optional"
-                      value={form.contactAlternatePhone}
-                      onChange={(e) => update("contactAlternatePhone", e.target.value)}
                     />
                   </Field>
                 </div>
@@ -589,9 +585,10 @@ function RequestPage() {
                     />
                     <AssignmentOption
                       active={form.assignmentType === "customer_selected"}
+                      disabled
                       title="Choose a provider"
-                      body="Pick a specific provider from the marketplace."
-                      onClick={() => update("assignmentType", "customer_selected")}
+                      body="Coming soon — for now, we'll match the best available provider."
+                      onClick={() => {}}
                     />
                   </div>
 
@@ -848,11 +845,13 @@ function SectionHeading({
 
 function AssignmentOption({
   active,
+  disabled,
   title,
   body,
   onClick,
 }: {
   active: boolean;
+  disabled?: boolean;
   title: string;
   body: string;
   onClick: () => void;
@@ -861,11 +860,14 @@ function AssignmentOption({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={cn(
         "rounded-lg border px-4 py-3 text-left transition-colors",
-        active
-          ? "border-primary bg-primary/5"
-          : "border-border hover:border-primary/40",
+        disabled
+          ? "cursor-not-allowed border-border opacity-50"
+          : active
+            ? "border-primary bg-primary/5"
+            : "border-border hover:border-primary/40",
       )}
     >
       <p className="text-sm font-semibold text-foreground">{title}</p>
