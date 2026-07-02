@@ -52,7 +52,7 @@ export interface RequestPayment {
 export interface RequestAssignment {
   id: string;
   service_request: string;
-  provider: string;
+  provider: { id: string; name: string };
   assignment_type: string;
   assigned_by: string;
   assignment_date: string;

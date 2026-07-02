@@ -5,6 +5,7 @@ import {
   AlertCircle,
   ArrowLeft,
   CalendarDays,
+  ExternalLink,
   ImagePlus,
   Loader2,
   MapPin,
@@ -123,9 +124,6 @@ function RequestDetail({
 
   const balance = requestBalance(request);
   const total = requestTotal(request);
-  const location = [request.formatted_address, request.city, request.district]
-    .filter(Boolean)
-    .join(", ");
   const heroImage = request.images[0];
 
   return (
@@ -402,11 +400,17 @@ function RequestDetail({
               label="Area"
               value={[request.city, request.district].filter(Boolean).join(", ")}
             />
-            {location && (
-              <p className="mt-2 flex items-start gap-2 text-sm text-muted-foreground">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                {location}
-              </p>
+            {request.latitude != null && request.longitude != null && (
+              <a
+                href={`https://maps.google.com/maps?q=${request.latitude},${request.longitude}`}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary/10"
+              >
+                <MapPin className="h-4 w-4 shrink-0" />
+                View on Google Maps
+                <ExternalLink className="ml-auto h-3.5 w-3.5 opacity-70" />
+              </a>
             )}
           </InfoBlock>
 

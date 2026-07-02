@@ -533,8 +533,7 @@ function AssignmentsTimeline({
       <ol className="relative space-y-0 border-l border-border pl-6">
         {assignments.map((assignment, index) => {
           const isLatest = index === 0;
-          const providerName =
-            providerNames.get(assignment.provider) ?? assignment.provider.slice(0, 8);
+          const providerName = assignment.provider.name;
 
           return (
             <li key={assignment.id} className="relative pb-6 last:pb-0">

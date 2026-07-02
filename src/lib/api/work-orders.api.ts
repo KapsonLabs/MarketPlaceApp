@@ -20,6 +20,24 @@ export interface WorkOrderProvider {
   name: string;
 }
 
+export interface WorkOrderMaterial {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  unit_cost: string;
+  total_cost: string;
+  notes?: string;
+}
+
+export interface CreateWorkOrderMaterialInput {
+  name: string;
+  quantity: number;
+  unit: string;
+  unit_cost: string;
+  notes?: string;
+}
+
 export interface WorkOrder {
   id: string;
   service_request: WorkOrderServiceRequest;
@@ -30,6 +48,7 @@ export interface WorkOrder {
   actual_end: string | null;
   status: WorkOrderStatus;
   final_cost: string | null;
+  materials: WorkOrderMaterial[];
   updates: WorkOrderUpdate[];
 }
 
@@ -116,6 +135,43 @@ export async function addWorkOrderUpdate(
 }
 
 // ---- Admin --------------------------------------------------------------
+
+export async function getAdminWorkOrder(id: string): Promise<WorkOrder> {
+  const res = await api.get(`/work-orders/admin/${id}/`);
+  return (res.data?.data ?? res.data) as WorkOrder;
+}
+
+// ---- Materials ----------------------------------------------------------
+
+export async function addWorkOrderMaterial(
+  workOrderId: string,
+  payload: CreateWorkOrderMaterialInput,
+  isAdmin = false,
+): Promise<WorkOrderMaterial> {
+  const base = isAdmin ? `/work-orders/admin/${workOrderId}` : `/work-orders/${workOrderId}`;
+  const res = await api.post(`${base}/materials/`, payload);
+  return (res.data?.data ?? res.data) as WorkOrderMaterial;
+}
+
+export async function deleteWorkOrderMaterial(
+  workOrderId: string,
+  materialId: string,
+  isAdmin = false,
+): Promise<void> {
+  const base = isAdmin ? `/work-orders/admin/${workOrderId}` : `/work-orders/${workOrderId}`;
+  await api.delete(`${base}/materials/${materialId}/`);
+}
+
+export async function updateWorkOrderMaterial(
+  workOrderId: string,
+  materialId: string,
+  payload: Partial<CreateWorkOrderMaterialInput>,
+  isAdmin = false,
+): Promise<WorkOrderMaterial> {
+  const base = isAdmin ? `/work-orders/admin/${workOrderId}` : `/work-orders/${workOrderId}`;
+  const res = await api.patch(`${base}/materials/${materialId}/`, payload);
+  return (res.data?.data ?? res.data) as WorkOrderMaterial;
+}
 
 export async function listAdminWorkOrders(
   page: number,
