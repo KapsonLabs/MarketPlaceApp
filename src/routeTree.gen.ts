@@ -22,7 +22,10 @@ import { Route as MarketplaceProvidersRouteImport } from './routes/marketplace/p
 import { Route as MarketplaceHowItWorksRouteImport } from './routes/marketplace/how-it-works'
 import { Route as MarketplaceForProvidersRouteImport } from './routes/marketplace/for-providers'
 import { Route as MarketplaceBillingRouteImport } from './routes/marketplace/billing'
+import { Route as MarketplaceAccountRouteImport } from './routes/marketplace/account'
+import { Route as AdministratorSettingsRouteImport } from './routes/administrator/settings'
 import { Route as AdministratorLoginRouteImport } from './routes/administrator/login'
+import { Route as AdministratorAccountRouteImport } from './routes/administrator/account'
 import { Route as MarketplaceRequestsIndexRouteImport } from './routes/marketplace/requests.index'
 import { Route as AdministratorTasksIndexRouteImport } from './routes/administrator/tasks.index'
 import { Route as AdministratorRequestsIndexRouteImport } from './routes/administrator/requests.index'
@@ -101,9 +104,24 @@ const MarketplaceBillingRoute = MarketplaceBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => MarketplaceRoute,
 } as any)
+const MarketplaceAccountRoute = MarketplaceAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => MarketplaceRoute,
+} as any)
+const AdministratorSettingsRoute = AdministratorSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdministratorRoute,
+} as any)
 const AdministratorLoginRoute = AdministratorLoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => AdministratorRoute,
+} as any)
+const AdministratorAccountRoute = AdministratorAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => AdministratorRoute,
 } as any)
 const MarketplaceRequestsIndexRoute =
@@ -177,7 +195,10 @@ export interface FileRoutesByFullPath {
   '/administrator': typeof AdministratorRouteWithChildren
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/server-error': typeof ServerErrorRoute
+  '/administrator/account': typeof AdministratorAccountRoute
   '/administrator/login': typeof AdministratorLoginRoute
+  '/administrator/settings': typeof AdministratorSettingsRoute
+  '/marketplace/account': typeof MarketplaceAccountRoute
   '/marketplace/billing': typeof MarketplaceBillingRoute
   '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
   '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
@@ -202,7 +223,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/server-error': typeof ServerErrorRoute
+  '/administrator/account': typeof AdministratorAccountRoute
   '/administrator/login': typeof AdministratorLoginRoute
+  '/administrator/settings': typeof AdministratorSettingsRoute
+  '/marketplace/account': typeof MarketplaceAccountRoute
   '/marketplace/billing': typeof MarketplaceBillingRoute
   '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
   '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
@@ -230,7 +254,10 @@ export interface FileRoutesById {
   '/administrator': typeof AdministratorRouteWithChildren
   '/marketplace': typeof MarketplaceRouteWithChildren
   '/server-error': typeof ServerErrorRoute
+  '/administrator/account': typeof AdministratorAccountRoute
   '/administrator/login': typeof AdministratorLoginRoute
+  '/administrator/settings': typeof AdministratorSettingsRoute
+  '/marketplace/account': typeof MarketplaceAccountRoute
   '/marketplace/billing': typeof MarketplaceBillingRoute
   '/marketplace/for-providers': typeof MarketplaceForProvidersRoute
   '/marketplace/how-it-works': typeof MarketplaceHowItWorksRoute
@@ -259,7 +286,10 @@ export interface FileRouteTypes {
     | '/administrator'
     | '/marketplace'
     | '/server-error'
+    | '/administrator/account'
     | '/administrator/login'
+    | '/administrator/settings'
+    | '/marketplace/account'
     | '/marketplace/billing'
     | '/marketplace/for-providers'
     | '/marketplace/how-it-works'
@@ -284,7 +314,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/server-error'
+    | '/administrator/account'
     | '/administrator/login'
+    | '/administrator/settings'
+    | '/marketplace/account'
     | '/marketplace/billing'
     | '/marketplace/for-providers'
     | '/marketplace/how-it-works'
@@ -311,7 +344,10 @@ export interface FileRouteTypes {
     | '/administrator'
     | '/marketplace'
     | '/server-error'
+    | '/administrator/account'
     | '/administrator/login'
+    | '/administrator/settings'
+    | '/marketplace/account'
     | '/marketplace/billing'
     | '/marketplace/for-providers'
     | '/marketplace/how-it-works'
@@ -434,11 +470,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MarketplaceBillingRouteImport
       parentRoute: typeof MarketplaceRoute
     }
+    '/marketplace/account': {
+      id: '/marketplace/account'
+      path: '/account'
+      fullPath: '/marketplace/account'
+      preLoaderRoute: typeof MarketplaceAccountRouteImport
+      parentRoute: typeof MarketplaceRoute
+    }
+    '/administrator/settings': {
+      id: '/administrator/settings'
+      path: '/settings'
+      fullPath: '/administrator/settings'
+      preLoaderRoute: typeof AdministratorSettingsRouteImport
+      parentRoute: typeof AdministratorRoute
+    }
     '/administrator/login': {
       id: '/administrator/login'
       path: '/login'
       fullPath: '/administrator/login'
       preLoaderRoute: typeof AdministratorLoginRouteImport
+      parentRoute: typeof AdministratorRoute
+    }
+    '/administrator/account': {
+      id: '/administrator/account'
+      path: '/account'
+      fullPath: '/administrator/account'
+      preLoaderRoute: typeof AdministratorAccountRouteImport
       parentRoute: typeof AdministratorRoute
     }
     '/marketplace/requests/': {
@@ -522,7 +579,9 @@ declare module '@tanstack/react-router' {
 }
 
 interface AdministratorRouteChildren {
+  AdministratorAccountRoute: typeof AdministratorAccountRoute
   AdministratorLoginRoute: typeof AdministratorLoginRoute
+  AdministratorSettingsRoute: typeof AdministratorSettingsRoute
   AdministratorIndexRoute: typeof AdministratorIndexRoute
   AdministratorPaymentsPaymentIdRoute: typeof AdministratorPaymentsPaymentIdRoute
   AdministratorProvidersProviderIdRoute: typeof AdministratorProvidersProviderIdRoute
@@ -535,7 +594,9 @@ interface AdministratorRouteChildren {
 }
 
 const AdministratorRouteChildren: AdministratorRouteChildren = {
+  AdministratorAccountRoute: AdministratorAccountRoute,
   AdministratorLoginRoute: AdministratorLoginRoute,
+  AdministratorSettingsRoute: AdministratorSettingsRoute,
   AdministratorIndexRoute: AdministratorIndexRoute,
   AdministratorPaymentsPaymentIdRoute: AdministratorPaymentsPaymentIdRoute,
   AdministratorProvidersProviderIdRoute: AdministratorProvidersProviderIdRoute,
@@ -563,6 +624,7 @@ const MarketplaceProvidersRouteWithChildren =
   MarketplaceProvidersRoute._addFileChildren(MarketplaceProvidersRouteChildren)
 
 interface MarketplaceRouteChildren {
+  MarketplaceAccountRoute: typeof MarketplaceAccountRoute
   MarketplaceBillingRoute: typeof MarketplaceBillingRoute
   MarketplaceForProvidersRoute: typeof MarketplaceForProvidersRoute
   MarketplaceHowItWorksRoute: typeof MarketplaceHowItWorksRoute
@@ -576,6 +638,7 @@ interface MarketplaceRouteChildren {
 }
 
 const MarketplaceRouteChildren: MarketplaceRouteChildren = {
+  MarketplaceAccountRoute: MarketplaceAccountRoute,
   MarketplaceBillingRoute: MarketplaceBillingRoute,
   MarketplaceForProvidersRoute: MarketplaceForProvidersRoute,
   MarketplaceHowItWorksRoute: MarketplaceHowItWorksRoute,

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Download, Wallet, TrendingUp, AlertTriangle } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,24 +25,31 @@ import {
   inDateRange,
   inAmountRange,
 } from "@/components/admin/list-filters";
-import { useAppState } from "@/lib/admin/store";
-import {
-  getProvider,
-  getRequest,
-  formatCurrency,
-  type PaymentStatus,
-} from "@/lib/admin/mock-data";
+import { listAllAdminInvoices, INVOICE_STATUS_LABEL } from "@/lib/api/invoices.api";
+import { listAllProviders } from "@/lib/providers.api";
 
 export const Route = createFileRoute("/administrator/payments/")({
-  head: () => ({ meta: [{ title: "Payments — Casmara Systems Admin" }] }),
+  head: () => ({ meta: [{ title: "Invoices & Payments — Casmara Systems Admin" }] }),
   component: PaymentsPage,
 });
 
-const STATUSES: PaymentStatus[] = ["Pending", "Approved", "Paid", "Disputed"];
+const STATUSES = Object.keys(INVOICE_STATUS_LABEL);
+
+function formatCurrency(n: number) {
+  return `UGX ${n.toLocaleString()}`;
+}
 
 function PaymentsPage() {
-  const { payments, providers } = useAppState();
   const navigate = useNavigate();
+  const { data: invoices = [], isLoading } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: listAllAdminInvoices,
+  });
+  const { data: providers = [] } = useQuery({
+    queryKey: ["providers", "all"],
+    queryFn: listAllProviders,
+  });
+
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [providerFilter, setProviderFilter] = useState("all");
@@ -71,74 +79,66 @@ function PaymentsPage() {
 
   const filtered = useMemo(
     () =>
-      payments.filter((p) => {
-        const r = getRequest(p.requestId);
-        const sp = getProvider(p.providerId);
-        const haystack = [p.id, p.requestId, sp?.company, sp?.name, r?.title]
+      invoices.filter((inv) => {
+        const haystack = [
+          inv.id,
+          inv.invoice_number,
+          inv.provider?.name,
+          inv.work_order?.service_request?.title,
+        ]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
         const matchesQuery = !query || haystack.includes(query.toLowerCase());
-        const matchesStatus = statusFilter === "all" || p.status === statusFilter;
+        const matchesStatus = statusFilter === "all" || inv.status === statusFilter;
         const matchesProvider =
-          providerFilter === "all" || p.providerId === providerFilter;
-        const matchesDate = inDateRange(p.invoicedAt, fromDate, toDate);
-        const matchesAmount = inAmountRange(p.amount, minAmount, maxAmount);
+          providerFilter === "all" || String(inv.provider?.id) === providerFilter;
+        const matchesDate = inDateRange(inv.invoiced_at, fromDate, toDate);
+        const matchesAmount = inAmountRange(Number(inv.amount), minAmount, maxAmount);
         return (
-          matchesQuery &&
-          matchesStatus &&
-          matchesProvider &&
-          matchesDate &&
-          matchesAmount
+          matchesQuery && matchesStatus && matchesProvider && matchesDate && matchesAmount
         );
       }),
-    [
-      payments,
-      query,
-      statusFilter,
-      providerFilter,
-      fromDate,
-      toDate,
-      minAmount,
-      maxAmount,
-    ]
+    [invoices, query, statusFilter, providerFilter, fromDate, toDate, minAmount, maxAmount],
   );
 
-
-  const totalGross = payments.reduce((s, p) => s + p.amount, 0);
-  const totalNet = payments.reduce((s, p) => s + p.net, 0);
-  const totalFees = payments.reduce((s, p) => s + p.platformFee, 0);
-  const pendingPayouts = payments
-    .filter((p) => p.status === "Pending" || p.status === "Approved")
-    .reduce((s, p) => s + p.net, 0);
-  const disputed = payments.filter((p) => p.status === "Disputed").length;
+  const totalGross = invoices.reduce((s, i) => s + Number(i.amount), 0);
+  const totalNet = invoices.reduce((s, i) => s + Number(i.net_amount), 0);
+  const totalFees = invoices.reduce((s, i) => s + Number(i.platform_fee), 0);
+  const pendingPayouts = invoices
+    .filter((i) => i.status === "pending" || i.status === "approved")
+    .reduce((s, i) => s + Number(i.net_amount), 0);
+  const disputed = invoices.filter((i) => i.status === "disputed").length;
 
   const remuneration = useMemo(() => {
-    const map = new Map<string, { paid: number; pending: number; jobs: number }>();
-    for (const p of payments) {
-      const entry = map.get(p.providerId) ?? { paid: 0, pending: 0, jobs: 0 };
+    const map = new Map<
+      string,
+      { paid: number; pending: number; jobs: number; name: string }
+    >();
+    for (const inv of invoices) {
+      const key = String(inv.provider?.id ?? "unknown");
+      const entry = map.get(key) ?? { paid: 0, pending: 0, jobs: 0, name: inv.provider?.name ?? "—" };
       entry.jobs += 1;
-      if (p.status === "Paid") entry.paid += p.net;
-      else if (p.status !== "Disputed") entry.pending += p.net;
-      map.set(p.providerId, entry);
+      if (inv.status === "paid") entry.paid += Number(inv.net_amount);
+      else if (inv.status !== "disputed") entry.pending += Number(inv.net_amount);
+      map.set(key, entry);
     }
     return Array.from(map.entries())
-      .map(([providerId, v]) => ({ provider: getProvider(providerId)!, ...v }))
-      .filter((r) => r.provider)
+      .map(([providerId, v]) => ({ providerId, ...v }))
       .sort((a, b) => b.paid + b.pending - (a.paid + a.pending));
-  }, [payments]);
+  }, [invoices]);
 
   const stats = [
-    { label: "Gross processed", value: formatCurrency(totalGross), icon: TrendingUp, hint: `${payments.length} transactions` },
-    { label: "Platform fees", value: formatCurrency(totalFees), icon: Wallet, hint: "10% of gross" },
+    { label: "Gross processed", value: formatCurrency(totalGross), icon: TrendingUp, hint: `${invoices.length} invoices` },
+    { label: "Platform fees", value: formatCurrency(totalFees), icon: Wallet, hint: "Marketplace fee" },
     { label: "Pending payouts", value: formatCurrency(pendingPayouts), icon: Wallet, hint: "Awaiting release" },
     { label: "Disputed", value: String(disputed), icon: AlertTriangle, hint: "Requires review" },
   ];
 
   return (
     <AdminShell
-      title="Payments & remuneration"
-      description="Track customer payments, platform fees, and provider payouts. Open a payment to update or release it."
+      title="Invoices & Payments"
+      description="Track invoices generated from closed work orders, customer payments, platform fees, and provider payouts."
       actions={
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" /> Export CSV
@@ -169,7 +169,7 @@ function PaymentsPage() {
 
       <Tabs defaultValue="transactions" className="mt-6">
         <TabsList>
-          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="transactions">Invoices</TabsTrigger>
           <TabsTrigger value="remuneration">Provider remuneration</TabsTrigger>
         </TabsList>
 
@@ -180,20 +180,20 @@ function PaymentsPage() {
                 <SearchInput
                   value={query}
                   onChange={setQuery}
-                  placeholder="Search by ID, provider, request…"
+                  placeholder="Search by invoice #, provider, request…"
                 />
                 <FilterSelect
                   value={statusFilter}
                   onChange={setStatusFilter}
                   allLabel="All statuses"
-                  options={STATUSES.map((s) => ({ value: s, label: s }))}
+                  options={STATUSES.map((s) => ({ value: s, label: INVOICE_STATUS_LABEL[s] }))}
                 />
                 <FilterSelect
                   value={providerFilter}
                   onChange={setProviderFilter}
                   allLabel="All providers"
                   width="w-[190px]"
-                  options={providers.map((p) => ({ value: p.id, label: p.company }))}
+                  options={providers.map((p) => ({ value: p.id, label: p.business_name }))}
                 />
                 <DateRangeFilter
                   from={fromDate}
@@ -215,15 +215,13 @@ function PaymentsPage() {
                 </p>
               </FilterBar>
 
-
               <div className="overflow-hidden rounded-md border border-border">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Payment</TableHead>
+                      <TableHead>Invoice</TableHead>
                       <TableHead>Provider</TableHead>
                       <TableHead>Request</TableHead>
-                      <TableHead>Method</TableHead>
                       <TableHead className="text-right">Gross</TableHead>
                       <TableHead className="text-right">Fee</TableHead>
                       <TableHead className="text-right">Net</TableHead>
@@ -231,54 +229,52 @@ function PaymentsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtered.map((p) => {
-                      const sp = getProvider(p.providerId);
-                      const r = getRequest(p.requestId);
-                      return (
-                        <TableRow
-                          key={p.id}
-                          className="cursor-pointer"
-                          onClick={() =>
-                            navigate({
-                              to: "/administrator/payments/$paymentId",
-                              params: { paymentId: p.id },
-                            })
-                          }
-                        >
-                          <TableCell>
-                            <p className="font-medium text-foreground">{p.id}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(p.invoicedAt).toLocaleDateString()}
-                            </p>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            <p className="font-medium text-foreground">{sp?.company}</p>
-                            <p className="text-xs text-muted-foreground">{sp?.name}</p>
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            <p>{r?.title}</p>
-                            <p className="text-xs text-muted-foreground">{p.requestId}</p>
-                          </TableCell>
-                          <TableCell className="text-sm">{p.method}</TableCell>
-                          <TableCell className="text-right text-sm">
-                            {formatCurrency(p.amount)}
-                          </TableCell>
-                          <TableCell className="text-right text-sm text-muted-foreground">
-                            {formatCurrency(p.platformFee)}
-                          </TableCell>
-                          <TableCell className="text-right text-sm font-medium">
-                            {formatCurrency(p.net)}
-                          </TableCell>
-                          <TableCell>
-                            <StatusBadge kind="payment" value={p.status} />
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {filtered.length === 0 && (
+                    {filtered.map((inv) => (
+                      <TableRow
+                        key={inv.id}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          navigate({
+                            to: "/administrator/payments/$paymentId",
+                            params: { paymentId: inv.id },
+                          })
+                        }
+                      >
+                        <TableCell>
+                          <p className="font-medium text-foreground">{inv.invoice_number}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(inv.invoiced_at).toLocaleDateString()}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <p className="font-medium text-foreground">{inv.provider?.name}</p>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          <p>{inv.work_order?.service_request?.title}</p>
+                          <p className="text-xs text-muted-foreground">{inv.work_order?.id}</p>
+                        </TableCell>
+                        <TableCell className="text-right text-sm">
+                          {formatCurrency(Number(inv.amount))}
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-muted-foreground">
+                          {formatCurrency(Number(inv.platform_fee))}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium">
+                          {formatCurrency(Number(inv.net_amount))}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge
+                            kind="invoice"
+                            value={inv.status}
+                            label={INVOICE_STATUS_LABEL[inv.status] ?? inv.status}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {!isLoading && filtered.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                          No payments match your filters.
+                        <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                          No invoices match your filters.
                         </TableCell>
                       </TableRow>
                     )}
@@ -297,7 +293,6 @@ function PaymentsPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Provider</TableHead>
-                      <TableHead>Specialty</TableHead>
                       <TableHead className="text-right">Jobs invoiced</TableHead>
                       <TableHead className="text-right">Paid out</TableHead>
                       <TableHead className="text-right">Pending payout</TableHead>
@@ -305,21 +300,10 @@ function PaymentsPage() {
                   </TableHeader>
                   <TableBody>
                     {remuneration.map((row) => (
-                      <TableRow
-                        key={row.provider.id}
-                        className="cursor-pointer"
-                        onClick={() =>
-                          navigate({
-                            to: "/administrator/providers/$providerId",
-                            params: { providerId: row.provider.id },
-                          })
-                        }
-                      >
+                      <TableRow key={row.providerId}>
                         <TableCell>
-                          <p className="font-medium text-foreground">{row.provider.company}</p>
-                          <p className="text-xs text-muted-foreground">{row.provider.name}</p>
+                          <p className="font-medium text-foreground">{row.name}</p>
                         </TableCell>
-                        <TableCell className="text-sm">{row.provider.specialty}</TableCell>
                         <TableCell className="text-right text-sm">{row.jobs}</TableCell>
                         <TableCell className="text-right text-sm font-medium text-success">
                           {formatCurrency(row.paid)}

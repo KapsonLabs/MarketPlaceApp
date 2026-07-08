@@ -48,8 +48,18 @@ export interface WorkOrder {
   actual_end: string | null;
   status: WorkOrderStatus;
   final_cost: string | null;
+  hours_worked: number | null;
+  issues_experienced: string | null;
   materials: WorkOrderMaterial[];
   updates: WorkOrderUpdate[];
+}
+
+export interface CloseWorkOrderInput {
+  final_cost: string;
+  actual_start?: string;
+  actual_end?: string;
+  hours_worked?: number;
+  issues_experienced?: string;
 }
 
 export interface WorkOrderUpdate {
@@ -132,6 +142,22 @@ export async function addWorkOrderUpdate(
 
   const res = await api.post(`/work-orders/${id}/updates/`, formData);
   return (res.data?.data ?? res.data) as WorkOrderUpdate;
+}
+
+/**
+ * Confirm final pricing and record operation details (actual hours, issues
+ * experienced) to close out a work order. Materials should be added via
+ * addWorkOrderMaterial beforehand; their total is passed in as part of
+ * final_cost by the caller.
+ */
+export async function closeWorkOrder(
+  id: string,
+  payload: CloseWorkOrderInput,
+  isAdmin = false,
+): Promise<WorkOrder> {
+  const base = isAdmin ? `/work-orders/admin/${id}` : `/work-orders/${id}`;
+  const res = await api.post(`${base}/close/`, payload);
+  return (res.data?.data ?? res.data) as WorkOrder;
 }
 
 // ---- Admin --------------------------------------------------------------

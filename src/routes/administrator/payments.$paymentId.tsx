@@ -1,5 +1,6 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, Wallet, Receipt, CreditCard } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Wallet, Receipt, CreditCard, ArrowLeft, ClipboardList, Package } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,51 +12,75 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAppState } from "@/lib/admin/store";
-import { setPaymentStatus, releasePayout } from "@/lib/admin/store";
 import {
-  getProvider,
-  getRequest,
-  formatCurrency,
-  type PaymentStatus,
-} from "@/lib/admin/mock-data";
+  getAdminInvoice,
+  updateInvoiceStatus,
+  releaseInvoicePayout,
+  INVOICE_STATUS_LABEL,
+  type InvoiceStatus,
+} from "@/lib/api/invoices.api";
 
 export const Route = createFileRoute("/administrator/payments/$paymentId")({
-  head: () => ({ meta: [{ title: "Payment detail — Casmara Systems Admin" }] }),
+  head: () => ({ meta: [{ title: "Invoice detail — Casmara Systems Admin" }] }),
   component: PaymentDetailPage,
-  notFoundComponent: () => (
-    <AdminShell title="Payment not found">
-      <p className="text-sm text-muted-foreground">
-        This payment does not exist.{" "}
-        <Link to="/administrator/payments" className="text-primary hover:underline">
-          Back to payments
-        </Link>
-      </p>
-    </AdminShell>
-  ),
 });
 
-const STATUSES: PaymentStatus[] = ["Pending", "Approved", "Paid", "Disputed"];
+const STATUSES = Object.keys(INVOICE_STATUS_LABEL);
+
+function formatCurrency(n: number) {
+  return `UGX ${n.toLocaleString()}`;
+}
 
 function PaymentDetailPage() {
   const { paymentId } = Route.useParams();
-  const { payments } = useAppState();
-  const payment = payments.find((p) => p.id === paymentId);
+  const queryClient = useQueryClient();
 
-  if (!payment) throw notFound();
+  const { data: invoice, isLoading, isError } = useQuery({
+    queryKey: ["invoice", paymentId],
+    queryFn: () => getAdminInvoice(paymentId),
+  });
 
-  const provider = getProvider(payment.providerId);
-  const request = getRequest(payment.requestId);
-  const releasable = payment.status === "Pending" || payment.status === "Approved";
+  const statusMutation = useMutation({
+    mutationFn: (status: InvoiceStatus) => updateInvoiceStatus(paymentId, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoice", paymentId] }),
+  });
+
+  const releaseMutation = useMutation({
+    mutationFn: () => releaseInvoicePayout(paymentId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invoice", paymentId] }),
+  });
+
+  if (isLoading) {
+    return (
+      <AdminShell title="Invoice">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </AdminShell>
+    );
+  }
+
+  if (isError || !invoice) {
+    return (
+      <AdminShell title="Invoice not found">
+        <p className="text-sm text-muted-foreground">
+          This invoice does not exist.{" "}
+          <Link to="/administrator/payments" className="text-primary hover:underline">
+            Back to invoices
+          </Link>
+        </p>
+      </AdminShell>
+    );
+  }
+
+  const releasable = invoice.status === "pending" || invoice.status === "approved";
 
   return (
     <AdminShell
-      title={`Payment ${payment.id}`}
-      description={`Invoiced ${new Date(payment.invoicedAt).toLocaleString()}${payment.paidAt ? ` • paid ${new Date(payment.paidAt).toLocaleDateString()}` : ""}`}
+      title={invoice.invoice_number}
+      description={`Invoiced ${new Date(invoice.invoiced_at).toLocaleString()}${invoice.paid_at ? ` • paid ${new Date(invoice.paid_at).toLocaleDateString()}` : ""}`}
       actions={
         <Button asChild variant="outline">
           <Link to="/administrator/payments">
-            <ArrowLeft className="mr-2 h-4 w-4" /> All payments
+            <ArrowLeft className="mr-2 h-4 w-4" /> All invoices
           </Link>
         </Button>
       }
@@ -65,49 +90,112 @@ function PaymentDetailPage() {
           <Card className="border-border">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2">
-                <StatusBadge kind="payment" value={payment.status} />
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                  <CreditCard className="h-3.5 w-3.5" /> {payment.method}
-                </span>
+                <StatusBadge
+                  kind="invoice"
+                  value={invoice.status}
+                  label={INVOICE_STATUS_LABEL[invoice.status] ?? invoice.status}
+                />
+                {invoice.method && (
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <CreditCard className="h-3.5 w-3.5" /> {invoice.method}
+                  </span>
+                )}
               </div>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
-              <Amount icon={Receipt} label="Gross" value={formatCurrency(payment.amount)} />
-              <Amount icon={Wallet} label="Platform fee" value={formatCurrency(payment.platformFee)} muted />
-              <Amount icon={Wallet} label="Net to provider" value={formatCurrency(payment.net)} accent />
+              <Amount icon={Receipt} label="Gross" value={formatCurrency(Number(invoice.amount))} />
+              <Amount
+                icon={Wallet}
+                label="Platform fee"
+                value={formatCurrency(Number(invoice.platform_fee))}
+                muted
+              />
+              <Amount
+                icon={Wallet}
+                label="Net to provider"
+                value={formatCurrency(Number(invoice.net_amount))}
+                accent
+              />
             </CardContent>
           </Card>
+
+          {(Number(invoice.materials_cost) > 0 || Number(invoice.labor_cost) > 0) && (
+            <Card className="border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <Package className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-base">Cost breakdown</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Materials</p>
+                  <p className="mt-0.5 text-sm font-semibold">
+                    {formatCurrency(Number(invoice.materials_cost))}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground">Labor</p>
+                  <p className="mt-0.5 text-sm font-semibold">
+                    {formatCurrency(Number(invoice.labor_cost))}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {invoice.operation_notes && (
+            <Card className="border-border">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-base">Operation notes / issues experienced</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {invoice.operation_notes}
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Linked records</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {request && (
+              {invoice.work_order?.service_request && (
                 <Link
                   to="/administrator/requests/$requestId"
-                  params={{ requestId: request.id }}
+                  params={{ requestId: invoice.work_order.service_request.id }}
                   className="block rounded-md border border-border p-3 transition-colors hover:bg-accent/50"
                 >
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Request
                   </p>
-                  <p className="text-sm font-medium">{request.title}</p>
-                  <p className="text-xs text-muted-foreground">{request.id}</p>
+                  <p className="text-sm font-medium">{invoice.work_order.service_request.title}</p>
                 </Link>
               )}
-              {provider && (
+              {invoice.work_order && (
                 <Link
-                  to="/administrator/providers/$providerId"
-                  params={{ providerId: provider.id }}
+                  to="/administrator/tasks/$taskId"
+                  params={{ taskId: invoice.work_order.id }}
                   className="block rounded-md border border-border p-3 transition-colors hover:bg-accent/50"
                 >
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Work order
+                  </p>
+                  <p className="text-sm font-medium">{invoice.work_order.id}</p>
+                </Link>
+              )}
+              {invoice.provider && (
+                <div className="rounded-md border border-border p-3">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     Provider
                   </p>
-                  <p className="text-sm font-medium">{provider.company}</p>
-                  <p className="text-xs text-muted-foreground">{provider.name}</p>
-                </Link>
+                  <p className="text-sm font-medium">{invoice.provider.name}</p>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -120,8 +208,8 @@ function PaymentDetailPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               <Select
-                value={payment.status}
-                onValueChange={(v) => setPaymentStatus(payment.id, v as PaymentStatus)}
+                value={invoice.status}
+                onValueChange={(v) => statusMutation.mutate(v as InvoiceStatus)}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -129,22 +217,22 @@ function PaymentDetailPage() {
                 <SelectContent>
                   {STATUSES.map((s) => (
                     <SelectItem key={s} value={s}>
-                      {s}
+                      {INVOICE_STATUS_LABEL[s]}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Button
                 className="w-full"
-                disabled={!releasable}
-                onClick={() => releasePayout(payment.id)}
+                disabled={!releasable || releaseMutation.isPending}
+                onClick={() => releaseMutation.mutate()}
               >
                 <Wallet className="mr-2 h-4 w-4" />
-                {payment.status === "Paid" ? "Payout released" : "Release payout"}
+                {invoice.status === "paid" ? "Payout released" : "Release payout"}
               </Button>
-              {payment.status === "Disputed" && (
+              {invoice.status === "disputed" && (
                 <p className="text-xs text-destructive">
-                  This payment is disputed. Resolve before releasing.
+                  This invoice is disputed. Resolve before releasing.
                 </p>
               )}
             </CardContent>

@@ -1,11 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, CalendarClock, Package, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarClock,
+  ClipboardList,
+  Package,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { CustomDialog } from "@/components/admin/custom-dialog";
 import { StatusUpdateForm } from "@/components/admin/status-update-form";
+import { WorkOrderClosureForm } from "@/components/admin/work-order-closure-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +31,10 @@ import {
   addWorkOrderUpdate,
   addWorkOrderMaterial,
   deleteWorkOrderMaterial,
+  closeWorkOrder,
   WORK_ORDER_STATUS_LABEL,
   type WorkOrderStatus,
+  type CloseWorkOrderInput,
 } from "@/lib/api/work-orders.api";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -95,9 +105,18 @@ function TaskDetailPage() {
     },
   });
 
+  const closeMutation = useMutation({
+    mutationFn: (payload: CloseWorkOrderInput) => closeWorkOrder(taskId, payload, isAdmin),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["work-order", taskId] });
+      setModalView(null);
+      setPendingStatus(null);
+    },
+  });
+
   const handleOpenModal = (view: string, status?: WorkOrderStatus) => {
     if (status) setPendingStatus(status);
-    setModalView(view);
+    setModalView(status === "completed" ? "closure" : view);
   };
 
   const handleCloseModal = () => {
@@ -182,6 +201,19 @@ function TaskDetailPage() {
           isPending={statusMutation.isPending}
         />
       ) : null,
+    },
+    closure: {
+      title: "Close work order",
+      description: (
+        <WorkOrderClosureForm
+          materials={materials}
+          defaultActualStart={workOrder.actual_start}
+          defaultActualEnd={workOrder.actual_end}
+          onConfirm={(values) => closeMutation.mutate(values)}
+          onCancel={handleCloseModal}
+          isPending={closeMutation.isPending}
+        />
+      ),
     },
   };
 
@@ -361,6 +393,53 @@ function TaskDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Closure details */}
+          {workOrder.status === "completed" &&
+            (workOrder.hours_worked != null || workOrder.issues_experienced) && (
+              <Card className="border-border">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-base">Closure details</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Actual start</p>
+                      <p className="mt-0.5 text-sm">
+                        {workOrder.actual_start
+                          ? new Date(workOrder.actual_start).toLocaleString()
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Actual end</p>
+                      <p className="mt-0.5 text-sm">
+                        {workOrder.actual_end
+                          ? new Date(workOrder.actual_end).toLocaleString()
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">Hours worked</p>
+                      <p className="mt-0.5 text-sm">{workOrder.hours_worked ?? "—"}</p>
+                    </div>
+                  </div>
+                  {workOrder.issues_experienced && (
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground">
+                        Issues experienced
+                      </p>
+                      <p className="mt-0.5 whitespace-pre-wrap text-sm">
+                        {workOrder.issues_experienced}
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
           {/* Updates */}
           {workOrder.updates.length > 0 && (

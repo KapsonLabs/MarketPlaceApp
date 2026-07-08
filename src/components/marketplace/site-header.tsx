@@ -70,9 +70,12 @@ export function SiteHeader() {
           {user ? (
             <>
               <NotificationBell variant="marketplace" />
-              <span className="hidden max-w-[140px] truncate text-xs text-muted-foreground sm:inline">
+              <Link
+                to="/marketplace/account"
+                className="hidden max-w-[140px] truncate text-xs text-muted-foreground transition-colors hover:text-foreground sm:inline"
+              >
                 {user.name}
-              </span>
+              </Link>
               <Button
                 type="button"
                 variant="ghost"

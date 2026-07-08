@@ -5,6 +5,8 @@ import {
   Users,
   ListChecks,
   Wallet,
+  Settings,
+  UserRound,
   Search,
   LogOut,
 } from "lucide-react";
@@ -22,6 +24,8 @@ const navItems = [
   { to: "/administrator/providers", label: "Providers", icon: Users },
   { to: "/administrator/tasks", label: "Work Orders", icon: ListChecks },
   { to: "/administrator/payments", label: "Payments", icon: Wallet },
+  { to: "/administrator/settings", label: "Settings", icon: Settings },
+  { to: "/administrator/account", label: "Account", icon: UserRound },
 ] as const;
 
 export function AdminShell({
