@@ -1,1 +1,0 @@
-import{A as s}from"./index-CqnEfODR.js";async function i(t=1){const e=await s.get("/service-categories/",{params:{page:t}});return e.data?.data??e.data}async function c(){const t=[];let e=1;for(;;){const a=await i(e);if(t.push(...a.results.filter(r=>r.is_active)),!a.next)break;e+=1}return t.sort((a,r)=>a.display_order-r.display_order)}export{i as a,c as l};
